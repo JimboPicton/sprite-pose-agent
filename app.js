@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "0.4.0", buildDate: "2026-06-28" };
+const FALLBACK_VERSION = { version: "0.5.1", buildDate: "2026-06-28" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -105,6 +105,7 @@ const sourcePreview = $("#sourcePreview");
 const timeline = $("#timeline");
 const poseCanvas = $("#poseCanvas");
 let imageUrl = "";
+let referenceDataUrl = "";
 const clonePoses = cloneSequence;
 let poses = clonePoses(WALK_POSES);
 let basePoses = clonePoses(WALK_POSES);
@@ -113,12 +114,16 @@ let playing = false;
 let timer = null;
 let draggedJoint = null;
 let comfyOnline = false;
+let keyframes = new Set();
 const JOINT_KEYS = ["head", "neck", "hip", "lElbow", "lHand", "rElbow", "rHand", "lKnee", "lFoot", "rKnee", "rFoot"];
 
 function loadImage(file) {
   if (!file?.type.startsWith("image/")) return;
   if (imageUrl) URL.revokeObjectURL(imageUrl);
   imageUrl = URL.createObjectURL(file);
+  const reader = new FileReader();
+  reader.addEventListener("load", () => { referenceDataUrl = reader.result; });
+  reader.readAsDataURL(file);
   sourcePreview.src = imageUrl;
   $("#animatedSprite").src = imageUrl;
   dropZone.classList.add("has-image");
@@ -136,6 +141,7 @@ dropZone.addEventListener("drop", e => loadImage(e.dataTransfer.files[0]));
 $("#removeImage").addEventListener("click", () => {
   if (imageUrl) URL.revokeObjectURL(imageUrl);
   imageUrl = "";
+  referenceDataUrl = "";
   fileInput.value = "";
   sourcePreview.removeAttribute("src");
   dropZone.classList.remove("has-image");
@@ -155,21 +161,24 @@ function drawPose(canvas, pose, small = false) {
   ctx.scale(scale, scale);
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
-  ctx.strokeStyle = "#1f513e";
   ctx.lineWidth = small ? 8 : 6;
-  const line = (a,b) => { ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); };
-  line(pose.neck, pose.hip);
-  line(pose.neck, pose.lElbow); line(pose.lElbow, pose.lHand);
-  line(pose.neck, pose.rElbow); line(pose.rElbow, pose.rHand);
-  line(pose.hip, pose.lKnee); line(pose.lKnee, pose.lFoot);
-  line(pose.hip, pose.rKnee); line(pose.rKnee, pose.rFoot);
+  const line = (a,b,color) => { ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); };
+  const near = "#ef6b3b";
+  const far = "#3478a5";
+  const centre = "#1f513e";
+  line(pose.neck, pose.hip, centre);
+  line(pose.neck, pose.rElbow, far); line(pose.rElbow, pose.rHand, far);
+  line(pose.hip, pose.rKnee, far); line(pose.rKnee, pose.rFoot, far);
+  line(pose.neck, pose.lElbow, near); line(pose.lElbow, pose.lHand, near);
+  line(pose.hip, pose.lKnee, near); line(pose.lKnee, pose.lFoot, near);
   ctx.fillStyle = "#c9f06a";
   ctx.strokeStyle = "#1f513e";
   ctx.lineWidth = small ? 5 : 4;
   ctx.beginPath(); ctx.arc(...pose.head, 17, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   JOINT_KEYS.forEach(key => {
     const point = pose[key];
-    ctx.fillStyle = key === "head" ? "#c9f06a" : "#ef6b3b";
+    const side = key.startsWith("l") ? near : key.startsWith("r") ? far : centre;
+    ctx.fillStyle = key === "head" ? "#c9f06a" : side;
     ctx.beginPath(); ctx.arc(...point, small ? 5 : 6, 0, Math.PI*2); ctx.fill();
     if (!small) {
       ctx.strokeStyle = "#fffdf8"; ctx.lineWidth = 2; ctx.stroke();
@@ -191,6 +200,12 @@ function renderTimeline() {
     const number = document.createElement("span");
     number.textContent = String(index + 1).padStart(2, "0");
     button.append(canvas, number);
+    if (keyframes.has(index)) {
+      const badge = document.createElement("span");
+      badge.className = "key-badge";
+      badge.textContent = "K";
+      button.append(badge);
+    }
     button.addEventListener("click", () => showFrame(index));
     timeline.append(button);
     drawPose(canvas, pose, true);
@@ -204,6 +219,10 @@ function showFrame(index) {
   $("#frameLabel").textContent = `Frame ${currentFrame + 1} · ${pose.name}`;
   $("#generatedFrame").classList.add("hidden");
   $("#propagateForward").disabled = currentFrame === poses.length - 1;
+  const isKey = keyframes.has(currentFrame);
+  $("#toggleKeyframe").textContent = isKey ? "Unmark keyframe" : "Mark keyframe";
+  $("#toggleKeyframe").classList.toggle("marked", isKey);
+  $("#createInbetweens").disabled = keyframes.size < 2;
   [...timeline.children].forEach((node, i) => node.classList.toggle("active", i === currentFrame));
 }
 
@@ -215,6 +234,7 @@ function buildPlan() {
     : animation.poses;
   basePoses = clonePoses(source);
   poses = clonePoses(basePoses);
+  keyframes = new Set();
   currentFrame = 0;
   $("#emptyState").classList.add("hidden");
   $("#animationStage").classList.remove("hidden");
@@ -241,7 +261,7 @@ async function checkComfy() {
   } catch {
     comfyOnline = false;
     $("#comfyDot").className = "error";
-    $("#comfyStatus").textContent = "Offline";
+    $("#comfyStatus").textContent = location.hostname.endsWith("github.io") ? "Local connector required" : "Offline";
     $("#generateFrame").disabled = true;
   }
 }
@@ -281,6 +301,7 @@ $("#generateFrame").addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         poseImage: renderControlPose(poses[currentFrame]),
+        referenceImage: referenceDataUrl,
         prompt: $("#generationPrompt").value,
         animation: $("#animationSelect").value,
         frame: currentFrame + 1
@@ -290,7 +311,7 @@ $("#generateFrame").addEventListener("click", async () => {
     if (!response.ok) throw new Error(result.error || "Generation failed");
     $("#generatedFrame").src = result.image;
     $("#generatedFrame").classList.remove("hidden");
-    $("#generationStatus").textContent = `Frame ${currentFrame + 1} rendered successfully. Pose-only conditioning is active.`;
+    $("#generationStatus").textContent = `Frame ${currentFrame + 1} rendered with reference + pose conditioning.`;
   } catch (error) {
     $("#generationStatus").textContent = error.message;
   } finally {
@@ -326,7 +347,7 @@ poseCanvas.addEventListener("pointerdown", event => {
   const candidates = JOINT_KEYS
     .map(key => ({ key, distance: Math.hypot(poses[currentFrame][key][0] - x, poses[currentFrame][key][1] - y) }))
     .sort((a, b) => a.distance - b.distance);
-  if (candidates[0].distance > 22) return;
+  if (candidates[0].distance > 32) return;
   draggedJoint = candidates[0].key;
   poseCanvas.setPointerCapture(event.pointerId);
   poseCanvas.classList.add("dragging");
@@ -355,6 +376,35 @@ poseCanvas.addEventListener("pointercancel", finishJointDrag);
 
 $("#referenceOpacity").addEventListener("input", event => {
   $("#animatedSprite").style.opacity = Number(event.target.value) / 100;
+});
+
+$("#toggleKeyframe").addEventListener("click", () => {
+  if (keyframes.has(currentFrame)) keyframes.delete(currentFrame);
+  else keyframes.add(currentFrame);
+  renderTimeline();
+  showFrame(currentFrame);
+});
+
+$("#createInbetweens").addEventListener("click", () => {
+  const keys = [...keyframes].sort((a, b) => a - b);
+  if (keys.length < 2) return;
+  for (let pair = 0; pair < keys.length - 1; pair += 1) {
+    const start = keys[pair];
+    const end = keys[pair + 1];
+    const span = end - start;
+    for (let frame = start + 1; frame < end; frame += 1) {
+      const amount = (frame - start) / span;
+      JOINT_KEYS.forEach(key => {
+        poses[frame][key] = [
+          Math.round(poses[start][key][0] + (poses[end][key][0] - poses[start][key][0]) * amount),
+          Math.round(poses[start][key][1] + (poses[end][key][1] - poses[start][key][1]) * amount)
+        ];
+      });
+    }
+  }
+  renderTimeline();
+  showFrame(currentFrame);
+  $("#frameLabel").textContent += " · in-betweens created";
 });
 
 $("#propagateForward").addEventListener("click", () => {

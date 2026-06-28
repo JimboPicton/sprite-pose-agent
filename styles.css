@@ -101,12 +101,14 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .frame-card.active { border: 2px solid var(--orange); padding: 3px; }
 .frame-card canvas { width: 100%; height: 100%; }
 .frame-card span { position: absolute; left: 4px; top: 3px; font: 8px DM Mono; }
+.frame-card .key-badge { left: auto; right: 4px; color: white; background: var(--orange); padding: 2px 4px; border-radius: 8px; }
 .mapping-tools { min-height: 62px; padding: 10px 14px; display: flex; align-items: center; gap: 9px; border-top: 1px solid var(--line); background: #f9f8f3; }
 .mapping-tools > div { margin-right: auto; display: flex; flex-direction: column; }
 .mapping-tools strong { font-size: 11px; }
 .mapping-tools span { color: var(--muted); font-size: 10px; }
 .mapping-tools button { padding: 8px 10px; border: 1px solid var(--line); background: white; font-size: 10px; }
 .mapping-tools .propagate-button { color: white; border-color: var(--green); background: var(--green); }
+.mapping-tools #toggleKeyframe.marked { color: white; border-color: var(--orange); background: var(--orange); }
 .mapping-tools .propagate-button:disabled { cursor: not-allowed; opacity: .4; }
 .reference-opacity { width: 120px; font-size: 8px; }
 .reference-opacity input { margin: 5px 0 0; }

@@ -19,10 +19,11 @@ async function readBody(req) {
   return Buffer.concat(parts);
 }
 
-async function uploadPose(dataUrl) {
+async function uploadImage(dataUrl, prefix) {
+  if (!dataUrl?.includes(",")) throw new Error(`Missing ${prefix} image.`);
   const bytes = Buffer.from(dataUrl.split(",")[1], "base64");
   const form = new FormData();
-  form.append("image", new Blob([bytes], { type: "image/png" }), `sprite-pose-${Date.now()}.png`);
+  form.append("image", new Blob([bytes], { type: "image/png" }), `${prefix}-${Date.now()}.png`);
   form.append("type", "input");
   form.append("overwrite", "true");
   const response = await fetch(`${COMFY}/upload/image`, { method: "POST", body: form });
@@ -45,9 +46,11 @@ async function waitForOutput(promptId) {
 }
 
 async function generate(payload) {
-  const uploaded = await uploadPose(payload.poseImage);
+  const uploaded = await uploadImage(payload.poseImage, "sprite-pose");
+  const reference = await uploadImage(payload.referenceImage, "sprite-reference");
   const workflow = JSON.parse(await readFile(join(ROOT, "workflows", "pose-controlnet-api.json"), "utf8"));
   workflow["46"].inputs.image = uploaded.subfolder ? `${uploaded.subfolder}/${uploaded.name}` : uploaded.name;
+  workflow["60"].inputs.image = reference.subfolder ? `${reference.subfolder}/${reference.name}` : reference.name;
   const prompt = `${payload.prompt}, ${payload.animation} animation, frame ${payload.frame}`;
   workflow["54"].inputs.text = prompt;
   workflow["56"].inputs.text = prompt;
@@ -93,5 +96,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`Sprite Pose Agent v0.4.0: http://127.0.0.1:${PORT}`);
+  console.log(`Sprite Pose Agent v0.5.1: http://127.0.0.1:${PORT}`);
 });

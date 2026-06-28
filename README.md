@@ -14,9 +14,10 @@ No package installation or build step is required.
 4. Build and preview the walk animation plan.
 5. Select a frame and drag its pose joints over the character reference.
 6. Use **Apply fit forward** to carry that frame's fitting offsets into all subsequent frames while preserving their motion.
-7. Export the edited pose-study sheet or JSON metadata.
+7. Alternatively mark two or more edited poses as keyframes, then use **Create in-betweens** to interpolate editable frames between them.
+8. Export the edited pose-study sheet or JSON metadata.
 
-The current renderer is intentionally a pose-study mock. It establishes the interaction, editable joint mapping, template schema, baseline, pivot, playback, and export pipeline before an AI image provider is connected.
+The current renderer establishes editable joint mapping, template schema, baseline, pivot, playback, export, and an experimental local ComfyUI path. The Comfy workflow combines an image-to-image reference latent with OpenPose ControlNet; stronger identity consistency will later use a dedicated reference-conditioning model such as IP-Adapter.
 
 ## Release identification
 

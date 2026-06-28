@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.1",
   "buildDate": "2026-06-28",
-  "label": "Local ComfyUI pose rendering"
+  "label": "Reference image plus pose conditioning"
 }
