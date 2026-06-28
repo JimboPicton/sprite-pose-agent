@@ -1,5 +1,5 @@
 {
-  "version": "0.5.1",
+  "version": "0.5.2",
   "buildDate": "2026-06-28",
-  "label": "Reference image plus pose conditioning"
+  "label": "Adjustable reference fidelity"
 }

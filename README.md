@@ -19,6 +19,8 @@ No package installation or build step is required.
 
 The current renderer establishes editable joint mapping, template schema, baseline, pivot, playback, export, and an experimental local ComfyUI path. The Comfy workflow combines an image-to-image reference latent with OpenPose ControlNet; stronger identity consistency will later use a dedicated reference-conditioning model such as IP-Adapter.
 
+The **Reference fidelity** control adjusts image-to-image denoise inversely: higher fidelity preserves more of the uploaded image, while lower fidelity permits larger pose changes. The current workflow uses a single rendering pass to avoid a second checkpoint repainting away character details.
+
 ## Release identification
 
 The current release number is shown in the page header, browser title, and footer. `version.json` is the source of truth when the app is served over HTTP. The HTML also embeds the same number as a fallback and adds it to CSS and JavaScript URLs for cache busting. Update all four occurrences together when publishing a new release.

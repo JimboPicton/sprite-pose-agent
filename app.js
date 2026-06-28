@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "0.5.1", buildDate: "2026-06-28" };
+const FALLBACK_VERSION = { version: "0.5.2", buildDate: "2026-06-28" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -302,6 +302,7 @@ $("#generateFrame").addEventListener("click", async () => {
       body: JSON.stringify({
         poseImage: renderControlPose(poses[currentFrame]),
         referenceImage: referenceDataUrl,
+        referenceFidelity: Number($("#referenceFidelity").value),
         prompt: $("#generationPrompt").value,
         animation: $("#animationSelect").value,
         frame: currentFrame + 1
@@ -317,6 +318,10 @@ $("#generateFrame").addEventListener("click", async () => {
   } finally {
     button.disabled = !comfyOnline;
   }
+});
+
+$("#referenceFidelity").addEventListener("input", event => {
+  $("#fidelityOutput").value = `${event.target.value}%`;
 });
 
 checkComfy();

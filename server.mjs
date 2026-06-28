@@ -54,6 +54,8 @@ async function generate(payload) {
   const prompt = `${payload.prompt}, ${payload.animation} animation, frame ${payload.frame}`;
   workflow["54"].inputs.text = prompt;
   workflow["56"].inputs.text = prompt;
+  const fidelity = Math.max(20, Math.min(90, Number(payload.referenceFidelity) || 65));
+  workflow["50"].inputs.denoise = Math.max(0.28, Math.min(0.72, 0.85 - fidelity * 0.006));
   workflow["50"].inputs.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
   workflow["58"].inputs.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
   workflow["51"].inputs.filename_prefix = `SpritePose/${payload.animation}_${String(payload.frame).padStart(2,"0")}`;
@@ -96,5 +98,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`Sprite Pose Agent v0.5.1: http://127.0.0.1:${PORT}`);
+  console.log(`Sprite Pose Agent v0.5.2: http://127.0.0.1:${PORT}`);
 });

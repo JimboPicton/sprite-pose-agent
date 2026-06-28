@@ -25,7 +25,7 @@ $node = $nodeCandidates[0]
 $project = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $project
 
-Write-Host "Starting Sprite Pose Agent v0.5.1..." -ForegroundColor Green
+Write-Host "Starting Sprite Pose Agent v0.5.2..." -ForegroundColor Green
 Write-Host "Keep this window open while using ComfyUI generation."
 Write-Host "Open http://127.0.0.1:4173 in your browser."
 try {

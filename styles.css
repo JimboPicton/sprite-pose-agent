@@ -76,6 +76,10 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .comfy-panel textarea { width: 100%; margin-top: 7px; padding: 10px; resize: vertical; color: var(--ink); border: 1px solid var(--line); background: white; font: 11px/1.5 Manrope, sans-serif; text-transform: none; }
 .comfy-panel button { width: 100%; margin-top: 10px; padding: 12px; border: 0; color: var(--ink); background: var(--lime); font-weight: 700; font-size: 11px; }
 .comfy-panel button:disabled { cursor: not-allowed; opacity: .42; }
+.comfy-range { display: block; margin-top: 12px; }
+.comfy-range span { display: flex; justify-content: space-between; }
+.comfy-range output { color: var(--green); }
+.comfy-range input { width: 100%; margin-top: 7px; accent-color: var(--green); }
 #generationStatus { min-height: 28px; margin: 8px 0 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
 .stage-panel { border-left: 0; display: flex; flex-direction: column; min-width: 0; }
 .stage-header { height: 104px; padding: 22px 27px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
