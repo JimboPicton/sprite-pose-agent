@@ -1,0 +1,14 @@
+# Local environment and generated output
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+outputs/
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Turn one character reference into an animation-ready sprite sheet.">
+  <title>Sprite Pose Agent</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Sprite Pose Agent home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span>Sprite Pose Agent</span>
+      <small>LAB</small>
+    </a>
+    <div class="project-state"><span></span> Local prototype</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Single reference · coherent motion</p>
+      <h1>One sprite in.<br><em>A whole performance out.</em></h1>
+      <p class="hero-copy">Shape an animation from a single character reference, refine every frame, and export a clean sheet for your game.</p>
+      <div class="steps" aria-label="Workflow">
+        <span class="active"><b>1</b> Character</span><i></i>
+        <span><b>2</b> Motion</span><i></i>
+        <span><b>3</b> Frames</span><i></i>
+        <span><b>4</b> Export</span>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <aside class="panel setup-panel">
+        <div class="panel-heading">
+          <p class="kicker">01 / Source</p>
+          <h2>Meet your character</h2>
+          <p>Use a full-body sprite with a transparent background for the cleanest result.</p>
+        </div>
+
+        <label class="drop-zone" id="dropZone" for="fileInput">
+          <input id="fileInput" type="file" accept="image/png,image/webp,image/jpeg">
+          <span class="upload-icon">↥</span>
+          <strong>Drop your sprite here</strong>
+          <small>or click to browse · PNG, WEBP, JPG</small>
+          <img id="sourcePreview" alt="Uploaded character preview">
+        </label>
+        <button class="text-button hidden" id="removeImage" type="button">Remove image</button>
+
+        <div class="field-row">
+          <label>
+            Animation
+            <select id="animationSelect">
+              <option value="walk">Walk cycle</option>
+            </select>
+          </label>
+          <label>
+            Frames
+            <select id="frameCount">
+              <option value="8">8 frames</option>
+              <option value="6">6 frames</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="range-field">
+          <span>Playback speed <output id="fpsOutput">10 fps</output></span>
+          <input id="fps" type="range" min="4" max="18" value="10">
+        </label>
+
+        <button class="primary-button" id="buildButton" type="button">
+          <span>Build animation plan</span><b>→</b>
+        </button>
+        <p class="privacy-note">⌁ Your image stays in this browser.</p>
+      </aside>
+
+      <section class="stage-panel">
+        <div class="stage-header">
+          <div>
+            <p class="kicker">02 / Motion study</p>
+            <h2 id="stageTitle">Walk cycle · 8 frames</h2>
+          </div>
+          <div class="playback">
+            <button id="previousFrame" type="button" aria-label="Previous frame">←</button>
+            <button class="play-button" id="playButton" type="button" aria-label="Play animation">▶</button>
+            <button id="nextFrame" type="button" aria-label="Next frame">→</button>
+          </div>
+        </div>
+
+        <div class="canvas-wrap">
+          <div class="empty-state" id="emptyState">
+            <span class="empty-figure" aria-hidden="true">◇</span>
+            <h3>Your motion study appears here</h3>
+            <p>Upload a character and build an animation plan to begin.</p>
+          </div>
+          <div class="animation-stage hidden" id="animationStage">
+            <div class="ground-line"></div>
+            <img id="animatedSprite" alt="Current animation frame">
+            <canvas id="poseCanvas" width="320" height="320"></canvas>
+            <span class="frame-label" id="frameLabel">Frame 1 · Contact</span>
+          </div>
+        </div>
+
+        <div class="timeline hidden" id="timeline"></div>
+
+        <div class="export-bar">
+          <div>
+            <strong>Export kit</strong>
+            <span>PNG sheet + frame metadata</span>
+          </div>
+          <button id="exportJson" type="button" disabled>Export JSON</button>
+          <button class="accent-button" id="exportSheet" type="button" disabled>Export sheet</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="principles">
+      <p class="kicker">Built around what matters</p>
+      <div>
+        <article><span>01</span><h3>Identity first</h3><p>Keep silhouette, palette, proportions, and visual language coherent across motion.</p></article>
+        <article><span>02</span><h3>Stable footing</h3><p>A shared ground line and pivot prevent distracting jumps between frames.</p></article>
+        <article><span>03</span><h3>Artist in control</h3><p>Inspect each key pose and refine only the frames that need another pass.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>SPRITE POSE AGENT · PROTOTYPE 0.1</span>
+    <span>Generic foundations now. Specialist pose packs later.</span>
+  </footer>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

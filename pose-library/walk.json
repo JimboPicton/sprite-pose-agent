@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "0.1",
+  "id": "generic.walk.side.v1",
+  "name": "Walk cycle",
+  "direction": "side",
+  "loop": true,
+  "defaultFps": 10,
+  "frameCount": 8,
+  "coordinateSpace": { "width": 320, "height": 320 },
+  "baseline": 284,
+  "pivot": { "x": 160, "y": 284 },
+  "phases": ["contact", "down", "passing", "up", "contact", "down", "passing", "up"],
+  "notes": "Original canonical motion template. Browser prototype coordinates currently live in app.js and will move to this data file when the app gains a build step."
+}
