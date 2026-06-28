@@ -19,9 +19,11 @@ No package installation or build step is required.
 
 The current renderer establishes editable joint mapping, template schema, baseline, pivot, playback, export, and an experimental local ComfyUI path. The Comfy workflow combines an image-to-image reference latent with OpenPose ControlNet; stronger identity consistency will later use a dedicated reference-conditioning model such as IP-Adapter.
 
-The **Reference fidelity** control adjusts image-to-image denoise inversely: higher fidelity preserves more of the uploaded image, while lower fidelity permits larger pose changes. The current workflow uses a single rendering pass to avoid a second checkpoint repainting away character details.
+The **Character identity** control adjusts IP-Adapter weight. The uploaded image now conditions the model through IP-Adapter Plus while OpenPose ControlNet independently controls the skeleton; generation starts from a fresh latent canvas, avoiding the earlier image-to-image pose lock.
 
-The **Pose strength** control adjusts OpenPose ControlNet independently. Until IP-Adapter is installed, substantial pose changes generally need lower reference fidelity (35–55%) and higher pose strength (110–140%).
+The **Pose strength** control adjusts OpenPose ControlNet independently.
+
+Rendered images are retained against their frame for the current browser session, appear as timeline thumbnails, and replace pose guides in sprite-sheet export. **Render all missing frames** processes the remainder of the sequence one at a time.
 
 ## Release identification
 

@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "0.5.3", buildDate: "2026-06-28" };
+const FALLBACK_VERSION = { version: "0.7.0", buildDate: "2026-06-28" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -115,6 +115,7 @@ let timer = null;
 let draggedJoint = null;
 let comfyOnline = false;
 let keyframes = new Set();
+let generatedFrames = [];
 const JOINT_KEYS = ["head", "neck", "hip", "lElbow", "lHand", "rElbow", "rHand", "lKnee", "lFoot", "rKnee", "rFoot"];
 
 function loadImage(file) {
@@ -200,6 +201,13 @@ function renderTimeline() {
     const number = document.createElement("span");
     number.textContent = String(index + 1).padStart(2, "0");
     button.append(canvas, number);
+    if (generatedFrames[index]) {
+      const rendered = document.createElement("img");
+      rendered.className = "frame-render";
+      rendered.src = generatedFrames[index];
+      rendered.alt = `Rendered frame ${index + 1}`;
+      button.append(rendered);
+    }
     if (keyframes.has(index)) {
       const badge = document.createElement("span");
       badge.className = "key-badge";
@@ -217,7 +225,12 @@ function showFrame(index) {
   const pose = poses[currentFrame];
   drawPose(poseCanvas, pose);
   $("#frameLabel").textContent = `Frame ${currentFrame + 1} · ${pose.name}`;
-  $("#generatedFrame").classList.add("hidden");
+  if (generatedFrames[currentFrame]) {
+    $("#generatedFrame").src = generatedFrames[currentFrame];
+    $("#generatedFrame").classList.remove("hidden");
+  } else {
+    $("#generatedFrame").classList.add("hidden");
+  }
   $("#propagateForward").disabled = currentFrame === poses.length - 1;
   const isKey = keyframes.has(currentFrame);
   $("#toggleKeyframe").textContent = isKey ? "Unmark keyframe" : "Mark keyframe";
@@ -235,6 +248,7 @@ function buildPlan() {
   basePoses = clonePoses(source);
   poses = clonePoses(basePoses);
   keyframes = new Set();
+  generatedFrames = Array(poses.length).fill(null);
   currentFrame = 0;
   $("#emptyState").classList.add("hidden");
   $("#animationStage").classList.remove("hidden");
@@ -244,6 +258,7 @@ function buildPlan() {
   $("#exportJson").disabled = false;
   $("#exportSheet").disabled = false;
   $("#generateFrame").disabled = !comfyOnline;
+  $("#generateAll").disabled = !comfyOnline;
   renderTimeline();
   showFrame(0);
   document.querySelector(".steps span:nth-of-type(2)").classList.add("active");
@@ -257,12 +272,15 @@ async function checkComfy() {
     comfyOnline = true;
     $("#comfyDot").className = "online";
     $("#comfyStatus").textContent = `Online · ${data.system?.comfyui_version || "ready"}`;
-    $("#generateFrame").disabled = $("#animationStage").classList.contains("hidden");
+    const noPlan = $("#animationStage").classList.contains("hidden");
+    $("#generateFrame").disabled = noPlan;
+    $("#generateAll").disabled = noPlan;
   } catch {
     comfyOnline = false;
     $("#comfyDot").className = "error";
     $("#comfyStatus").textContent = location.hostname.endsWith("github.io") ? "Local connector required" : "Offline";
     $("#generateFrame").disabled = true;
+    $("#generateAll").disabled = true;
   }
 }
 
@@ -302,33 +320,57 @@ function renderControlPose(currentPose) {
   return canvas.toDataURL("image/png");
 }
 
+async function renderFrame(index) {
+  $("#generationStatus").textContent = `Rendering frame ${index + 1} of ${poses.length} in ComfyUI…`;
+  const response = await fetch("/api/comfy/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      poseImage: renderControlPose(poses[index]),
+      referenceImage: referenceDataUrl,
+      referenceFidelity: Number($("#referenceFidelity").value),
+      poseStrength: Number($("#poseStrength").value),
+      prompt: $("#generationPrompt").value,
+      animation: $("#animationSelect").value,
+      frame: index + 1
+    })
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || "Generation failed");
+  generatedFrames[index] = result.image;
+  renderTimeline();
+  showFrame(index);
+  return result.image;
+}
+
 $("#generateFrame").addEventListener("click", async () => {
   const button = $("#generateFrame");
   button.disabled = true;
-  $("#generationStatus").textContent = `Rendering frame ${currentFrame + 1} in ComfyUI…`;
+  $("#generateAll").disabled = true;
   try {
-    const response = await fetch("/api/comfy/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        poseImage: renderControlPose(poses[currentFrame]),
-        referenceImage: referenceDataUrl,
-        referenceFidelity: Number($("#referenceFidelity").value),
-        poseStrength: Number($("#poseStrength").value),
-        prompt: $("#generationPrompt").value,
-        animation: $("#animationSelect").value,
-        frame: currentFrame + 1
-      })
-    });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Generation failed");
-    $("#generatedFrame").src = result.image;
-    $("#generatedFrame").classList.remove("hidden");
+    await renderFrame(currentFrame);
     $("#generationStatus").textContent = `Frame ${currentFrame + 1} rendered with reference + pose conditioning.`;
   } catch (error) {
     $("#generationStatus").textContent = error.message;
   } finally {
     button.disabled = !comfyOnline;
+    $("#generateAll").disabled = !comfyOnline;
+  }
+});
+
+$("#generateAll").addEventListener("click", async () => {
+  $("#generateFrame").disabled = true;
+  $("#generateAll").disabled = true;
+  try {
+    for (let index = 0; index < poses.length; index += 1) {
+      if (!generatedFrames[index]) await renderFrame(index);
+    }
+    $("#generationStatus").textContent = `All ${poses.length} frames are rendered and ready to export.`;
+  } catch (error) {
+    $("#generationStatus").textContent = error.message;
+  } finally {
+    $("#generateFrame").disabled = !comfyOnline;
+    $("#generateAll").disabled = !comfyOnline;
   }
 });
 
@@ -502,15 +544,31 @@ $("#exportJson").addEventListener("click", () => {
   download(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `${animationId}-poses.json`);
 });
 
-$("#exportSheet").addEventListener("click", () => {
-  const sheet = document.createElement("canvas");
-  sheet.width = poses.length * 320; sheet.height = 320;
-  const ctx = sheet.getContext("2d");
-  poses.forEach((pose, index) => {
-    const frame = document.createElement("canvas");
-    frame.width = 320; frame.height = 320;
-    drawPose(frame, pose);
-    ctx.drawImage(frame, index * 320, 0);
+function loadImageData(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = url;
   });
+}
+
+$("#exportSheet").addEventListener("click", async () => {
+  const hasRenders = generatedFrames.some(Boolean);
+  const cellSize = hasRenders ? 512 : 320;
+  const sheet = document.createElement("canvas");
+  sheet.width = poses.length * cellSize; sheet.height = cellSize;
+  const ctx = sheet.getContext("2d");
+  for (let index = 0; index < poses.length; index += 1) {
+    if (generatedFrames[index]) {
+      const image = await loadImageData(generatedFrames[index]);
+      ctx.drawImage(image, index * cellSize, 0, cellSize, cellSize);
+    } else {
+      const frame = document.createElement("canvas");
+      frame.width = 320; frame.height = 320;
+      drawPose(frame, poses[index]);
+      ctx.drawImage(frame, index * cellSize, 0, cellSize, cellSize);
+    }
+  }
   sheet.toBlob(blob => download(blob, `${$("#animationSelect").value}-pose-sheet.png`), "image/png");
 });

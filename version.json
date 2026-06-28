@@ -1,5 +1,5 @@
 {
-  "version": "0.5.3",
+  "version": "0.7.0",
   "buildDate": "2026-06-28",
-  "label": "OpenPose BODY-18 control and pose strength"
+  "label": "IP-Adapter character conditioning"
 }

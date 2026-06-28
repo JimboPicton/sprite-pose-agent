@@ -54,8 +54,9 @@ async function generate(payload) {
   const prompt = `${payload.prompt}, ${payload.animation} animation, frame ${payload.frame}`;
   workflow["54"].inputs.text = prompt;
   workflow["56"].inputs.text = prompt;
-  const fidelity = Math.max(20, Math.min(90, Number(payload.referenceFidelity) || 65));
-  workflow["50"].inputs.denoise = Math.max(0.28, Math.min(0.72, 0.85 - fidelity * 0.006));
+  const fidelity = Math.max(20, Math.min(100, Number(payload.referenceFidelity) || 75));
+  workflow["64"].inputs.weight = Math.max(0.2, Math.min(1, fidelity / 100));
+  workflow["50"].inputs.denoise = 1;
   workflow["45"].inputs.strength = Math.max(0.5, Math.min(1.6, (Number(payload.poseStrength) || 120) / 100));
   workflow["50"].inputs.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
   workflow["58"].inputs.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
@@ -98,6 +99,15 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+server.on("error", error => {
+  if (error.code === "EADDRINUSE") {
+    console.error(`Sprite Pose Agent is already running at http://127.0.0.1:${PORT}`);
+    process.exitCode = 0;
+    return;
+  }
+  throw error;
+});
+
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`Sprite Pose Agent v0.5.3: http://127.0.0.1:${PORT}`);
+  console.log(`Sprite Pose Agent v0.7.0: http://127.0.0.1:${PORT}`);
 });
