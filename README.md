@@ -6,14 +6,15 @@ The first prototype focuses on the core workflow: upload a character, choose an 
 
 ## Run the prototype
 
-No installation or build step is required.
+No package installation or build step is required.
 
-1. Open `index.html` directly in a modern browser, or serve this directory with any static web server.
-2. Upload a PNG, WEBP, or JPG character reference.
-3. Build and preview the walk animation plan.
-4. Select a frame and drag its pose joints over the character reference.
-5. Use **Apply fit forward** to carry that frame's fitting offsets into all subsequent frames while preserving their motion.
-6. Export the edited pose-study sheet or JSON metadata.
+1. For pose planning only, open `index.html` directly in a modern browser.
+2. For local ComfyUI generation on Windows, right-click `start-local.ps1` and choose **Run with PowerShell**, then open `http://127.0.0.1:4173`. Alternatively run `node server.mjs`.
+3. Upload a PNG, WEBP, or JPG character reference.
+4. Build and preview the walk animation plan.
+5. Select a frame and drag its pose joints over the character reference.
+6. Use **Apply fit forward** to carry that frame's fitting offsets into all subsequent frames while preserving their motion.
+7. Export the edited pose-study sheet or JSON metadata.
 
 The current renderer is intentionally a pose-study mock. It establishes the interaction, editable joint mapping, template schema, baseline, pivot, playback, and export pipeline before an AI image provider is connected.
 

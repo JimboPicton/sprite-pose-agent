@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "0.3.1", buildDate: "2026-06-28" };
+const FALLBACK_VERSION = { version: "0.4.0", buildDate: "2026-06-28" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -112,6 +112,7 @@ let currentFrame = 0;
 let playing = false;
 let timer = null;
 let draggedJoint = null;
+let comfyOnline = false;
 const JOINT_KEYS = ["head", "neck", "hip", "lElbow", "lHand", "rElbow", "rHand", "lKnee", "lFoot", "rKnee", "rFoot"];
 
 function loadImage(file) {
@@ -201,6 +202,7 @@ function showFrame(index) {
   const pose = poses[currentFrame];
   drawPose(poseCanvas, pose);
   $("#frameLabel").textContent = `Frame ${currentFrame + 1} · ${pose.name}`;
+  $("#generatedFrame").classList.add("hidden");
   $("#propagateForward").disabled = currentFrame === poses.length - 1;
   [...timeline.children].forEach((node, i) => node.classList.toggle("active", i === currentFrame));
 }
@@ -221,10 +223,82 @@ function buildPlan() {
   $("#stageTitle").textContent = `${animation.label} · ${poses.length} frames`;
   $("#exportJson").disabled = false;
   $("#exportSheet").disabled = false;
+  $("#generateFrame").disabled = !comfyOnline;
   renderTimeline();
   showFrame(0);
   document.querySelector(".steps span:nth-of-type(2)").classList.add("active");
 }
+
+async function checkComfy() {
+  try {
+    const response = await fetch("/api/comfy/status", { cache: "no-store" });
+    if (!response.ok) throw new Error("ComfyUI unavailable");
+    const data = await response.json();
+    comfyOnline = true;
+    $("#comfyDot").className = "online";
+    $("#comfyStatus").textContent = `Online · ${data.system?.comfyui_version || "ready"}`;
+    $("#generateFrame").disabled = $("#animationStage").classList.contains("hidden");
+  } catch {
+    comfyOnline = false;
+    $("#comfyDot").className = "error";
+    $("#comfyStatus").textContent = "Offline";
+    $("#generateFrame").disabled = true;
+  }
+}
+
+function renderControlPose(currentPose) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512; canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+  const scale = 512 / 320;
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 512, 512);
+  ctx.scale(scale, scale);
+  ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 7;
+  const midpoint = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const lShoulder = midpoint(currentPose.neck, currentPose.lElbow);
+  const rShoulder = midpoint(currentPose.neck, currentPose.rElbow);
+  const segments = [
+    [currentPose.neck,currentPose.hip,"#00ff00"],
+    [currentPose.neck,lShoulder,"#ffff00"], [lShoulder,currentPose.lElbow,"#ff9900"], [currentPose.lElbow,currentPose.lHand,"#ff0000"],
+    [currentPose.neck,rShoulder,"#00ffff"], [rShoulder,currentPose.rElbow,"#0066ff"], [currentPose.rElbow,currentPose.rHand,"#9900ff"],
+    [currentPose.hip,currentPose.lKnee,"#ff00ff"], [currentPose.lKnee,currentPose.lFoot,"#ff0066"],
+    [currentPose.hip,currentPose.rKnee,"#66ff00"], [currentPose.rKnee,currentPose.rFoot,"#00ff99"]
+  ];
+  segments.forEach(([a,b,color]) => {
+    ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke();
+  });
+  ctx.strokeStyle = "#ff3333"; ctx.beginPath(); ctx.arc(...currentPose.head, 18, 0, Math.PI * 2); ctx.stroke();
+  return canvas.toDataURL("image/png");
+}
+
+$("#generateFrame").addEventListener("click", async () => {
+  const button = $("#generateFrame");
+  button.disabled = true;
+  $("#generationStatus").textContent = `Rendering frame ${currentFrame + 1} in ComfyUI…`;
+  try {
+    const response = await fetch("/api/comfy/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        poseImage: renderControlPose(poses[currentFrame]),
+        prompt: $("#generationPrompt").value,
+        animation: $("#animationSelect").value,
+        frame: currentFrame + 1
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Generation failed");
+    $("#generatedFrame").src = result.image;
+    $("#generatedFrame").classList.remove("hidden");
+    $("#generationStatus").textContent = `Frame ${currentFrame + 1} rendered successfully. Pose-only conditioning is active.`;
+  } catch (error) {
+    $("#generationStatus").textContent = error.message;
+  } finally {
+    button.disabled = !comfyOnline;
+  }
+});
+
+checkComfy();
 
 function syncFrameOptions() {
   const animation = ANIMATIONS[$("#animationSelect").value];

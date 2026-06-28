@@ -65,6 +65,18 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .primary-button:hover { background: #153e2f; }
 .primary-button b { color: var(--lime); font-size: 19px; }
 .privacy-note { text-align: center; color: #89918c; font-size: 10px; }
+.comfy-panel { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--line); }
+.comfy-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.comfy-heading > div { display: flex; align-items: center; gap: 7px; }
+.comfy-heading small { color: var(--muted); font-size: 9px; }
+#comfyDot { width: 8px; height: 8px; border-radius: 50%; background: #a3aaa6; }
+#comfyDot.online { background: #4f9f66; box-shadow: 0 0 0 3px #dcebd8; }
+#comfyDot.error { background: var(--orange); }
+.comfy-panel label { display: block; }
+.comfy-panel textarea { width: 100%; margin-top: 7px; padding: 10px; resize: vertical; color: var(--ink); border: 1px solid var(--line); background: white; font: 11px/1.5 Manrope, sans-serif; text-transform: none; }
+.comfy-panel button { width: 100%; margin-top: 10px; padding: 12px; border: 0; color: var(--ink); background: var(--lime); font-weight: 700; font-size: 11px; }
+.comfy-panel button:disabled { cursor: not-allowed; opacity: .42; }
+#generationStatus { min-height: 28px; margin: 8px 0 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
 .stage-panel { border-left: 0; display: flex; flex-direction: column; min-width: 0; }
 .stage-header { height: 104px; padding: 22px 27px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
 .stage-header h2 { margin-bottom: 0; }
@@ -79,6 +91,7 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .animation-stage { width: 320px; height: 350px; position: relative; }
 .animation-stage img, #poseCanvas { position: absolute; left: 0; top: 0; width: 320px; height: 320px; object-fit: contain; image-rendering: pixelated; }
 .animation-stage img { opacity: .28; filter: saturate(.5); pointer-events: none; }
+.animation-stage .generated-frame { z-index: 4; opacity: 1; filter: none; background: white; }
 #poseCanvas { z-index: 2; cursor: grab; touch-action: none; }
 #poseCanvas.dragging { cursor: grabbing; }
 .ground-line { position: absolute; z-index: 3; left: -90px; right: -90px; top: 286px; border-top: 1px dashed var(--orange); }

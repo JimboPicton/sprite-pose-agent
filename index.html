@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Turn one character reference into an animation-ready sprite sheet.">
   <title>Sprite Pose Agent</title>
-  <link rel="stylesheet" href="styles.css?v=0.3.1">
+  <link rel="stylesheet" href="styles.css?v=0.4.0">
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <span>Sprite Pose Agent</span>
       <small>LAB</small>
     </a>
-    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.3.1</strong></div>
+    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.4.0</strong></div>
   </header>
 
   <main>
@@ -80,6 +80,19 @@
           <span>Build animation plan</span><b>→</b>
         </button>
         <p class="privacy-note">⌁ Your image stays in this browser.</p>
+
+        <div class="comfy-panel">
+          <div class="comfy-heading">
+            <div><span id="comfyDot"></span><strong>ComfyUI</strong></div>
+            <small id="comfyStatus">Checking local API…</small>
+          </div>
+          <label>
+            Generation prompt
+            <textarea id="generationPrompt" rows="4">full-body 2D game sprite, side view, clean silhouette, consistent proportions, isolated character, plain background, match the supplied pose</textarea>
+          </label>
+          <button id="generateFrame" type="button" disabled>Render current pose</button>
+          <p id="generationStatus">Build an animation plan, then render one frame.</p>
+        </div>
       </aside>
 
       <section class="stage-panel">
@@ -104,6 +117,7 @@
           <div class="animation-stage hidden" id="animationStage">
             <div class="ground-line"></div>
             <img id="animatedSprite" alt="Current animation frame">
+            <img class="generated-frame hidden" id="generatedFrame" alt="AI-generated frame">
             <canvas id="poseCanvas" width="320" height="320"></canvas>
             <span class="frame-label" id="frameLabel">Frame 1 · Contact</span>
           </div>
@@ -147,9 +161,9 @@
   </main>
 
   <footer>
-    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.3.1</strong> · <span id="buildDate">28 JUN 2026</span></span>
+    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.4.0</strong> · <span id="buildDate">28 JUN 2026</span></span>
     <span>Generic foundations now. Specialist pose packs later.</span>
   </footer>
-  <script type="module" src="app.js?v=0.3.1"></script>
+  <script type="module" src="app.js?v=0.4.0"></script>
 </body>
 </html>
