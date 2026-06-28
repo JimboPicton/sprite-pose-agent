@@ -17,13 +17,33 @@ No package installation or build step is required.
 7. Alternatively mark two or more edited poses as keyframes, then use **Create in-betweens** to interpolate editable frames between them.
 8. Export the edited pose-study sheet or JSON metadata.
 
-The current renderer establishes editable joint mapping, template schema, baseline, pivot, playback, export, and an experimental local ComfyUI path. The Comfy workflow combines an image-to-image reference latent with OpenPose ControlNet; stronger identity consistency will later use a dedicated reference-conditioning model such as IP-Adapter.
+The current renderer establishes editable joint mapping, template schema, baseline, pivot, playback, export, and a local ComfyUI path. The Comfy workflow combines IP-Adapter Plus character conditioning with OpenPose ControlNet and starts from a fresh latent canvas.
 
-The **Character identity** control adjusts IP-Adapter weight. The uploaded image now conditions the model through IP-Adapter Plus while OpenPose ControlNet independently controls the skeleton; generation starts from a fresh latent canvas, avoiding the earlier image-to-image pose lock.
+The uploaded reference is automatically cropped around the character, squared, and placed on a neutral background before IP-Adapter sees it. Structured fields put essential costume and equipment traits before art direction and pose language. Identity modes alter both IP-Adapter timing and embedding behaviour; the fine-tune slider adjusts its weight.
 
 The **Pose strength** control adjusts OpenPose ControlNet independently.
 
+The optional **Pixel Snapper finish** quantizes each completed frame to a selected palette after generation. This is a deterministic finishing stage, rather than relying on a diffusion prompt alone to imitate pixel structure.
+
+**Transparent Unity PNG** uses ComfyUI's native BiRefNet background-removal nodes to create a real alpha channel after generation. The control enables automatically when a compatible model is present in `ComfyUI-Shared/models/background_removal`. Prompting for a plain background is still useful, but is not treated as a substitute for segmentation.
+
+The final stage scales every frame to an exact square Unity sprite size: 16, 32, 64, 128, or 256 pixels. Generation remains high resolution for anatomy and equipment construction. Pixel-finished frames use nearest-neighbour reduction; illustrated frames use Lanczos reduction. Detailed full-body characters are best developed at 128 or 256 pixels before testing smaller silhouettes.
+
 Rendered images are retained against their frame for the current browser session, appear as timeline thumbnails, and replace pose guides in sprite-sheet export. **Render all missing frames** processes the remainder of the sequence one at a time.
+
+## LoRA foundation
+
+A project-specific LoRA is the planned route to a repeatable WW1 visual language and consistent cast.
+
+1. Establish one target sprite resolution, palette range, outline treatment, camera angle, and proportion guide.
+2. Build a rights-cleared training set for each reusable character or uniform family. Prefer 20–40 clean images covering the same identity from varied poses and angles.
+3. Caption stable identity traits separately from changeable pose, view, and action traits.
+4. Reserve a unique trigger token for each character or uniform family.
+5. Keep a small validation set out of training and compare it on fixed seeds and canonical pose controls.
+6. Train the style LoRA separately from character LoRAs where possible. This lets the app combine a shared WW1 game style with different soldiers.
+7. Add the selected LoRA to the Comfy workflow between checkpoint loading and IP-Adapter/OpenPose conditioning.
+
+Do not train on artwork unless its licence and provenance permit model training and derivative use.
 
 ## Release identification
 
@@ -50,7 +70,7 @@ references/                 Research notes only; no copyrighted assets
 
 ## Next milestone
 
-Convert the static prototype to a typed application and implement one real `SpriteGenerator` provider behind an asynchronous job API. Generated frames should then replace the pose mock while retaining the existing preview, alignment, and export workflow.
+Create and validate the first rights-cleared WW1 pixel-art style dataset, train a small SD 1.5 LoRA, and expose LoRA selection and strength in the existing local generator interface.
 
 ## References
 

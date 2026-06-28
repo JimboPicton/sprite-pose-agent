@@ -51,15 +51,66 @@ async function generate(payload) {
   const workflow = JSON.parse(await readFile(join(ROOT, "workflows", "pose-controlnet-api.json"), "utf8"));
   workflow["46"].inputs.image = uploaded.subfolder ? `${uploaded.subfolder}/${uploaded.name}` : uploaded.name;
   workflow["60"].inputs.image = reference.subfolder ? `${reference.subfolder}/${reference.name}` : reference.name;
-  const prompt = `${payload.prompt}, ${payload.animation} animation, frame ${payload.frame}`;
+  const prompt = [
+    payload.characterDescription,
+    payload.essentialFeatures,
+    payload.artStyle,
+    payload.direction,
+    `${payload.animation} animation, frame ${payload.frame}`,
+    "match the supplied OpenPose skeleton"
+  ].map(value => String(value || "").trim()).filter(Boolean).join(", ");
   workflow["54"].inputs.text = prompt;
-  workflow["56"].inputs.text = prompt;
+  workflow["55"].inputs.text = String(payload.negativePrompt || workflow["55"].inputs.text);
   const fidelity = Math.max(20, Math.min(100, Number(payload.referenceFidelity) || 75));
   workflow["64"].inputs.weight = Math.max(0.2, Math.min(1, fidelity / 100));
+  const identityModes = {
+    balanced: { weight_type: "linear", embeds_scaling: "V only" },
+    strong: { weight_type: "strong middle", embeds_scaling: "K+V w/ C penalty" },
+    style: { weight_type: "strong style transfer", embeds_scaling: "V only" },
+    flexible: { weight_type: "ease out", embeds_scaling: "V only" }
+  };
+  const identity = identityModes[payload.identityMode] || identityModes.balanced;
+  workflow["64"].inputs.weight_type = identity.weight_type;
+  workflow["64"].inputs.embeds_scaling = identity.embeds_scaling;
   workflow["50"].inputs.denoise = 1;
   workflow["45"].inputs.strength = Math.max(0.5, Math.min(1.6, (Number(payload.poseStrength) || 120) / 100));
   workflow["50"].inputs.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-  workflow["58"].inputs.seed = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+  workflow["65"].inputs.k_colors = Math.max(4, Math.min(64, Number(payload.pixelPalette) || 24));
+  const finishedImage = payload.pixelFinish ? ["65", 0] : ["49", 0];
+  let exportImage = finishedImage;
+  if (payload.transparentOutput) {
+    const modelsResponse = await fetch(`${COMFY}/models/background_removal`);
+    const backgroundModels = modelsResponse.ok ? await modelsResponse.json() : [];
+    if (!backgroundModels.length) {
+      throw new Error("Transparent PNG requires a BiRefNet model in ComfyUI-Shared/models/background_removal.");
+    }
+    workflow["66"] = {
+      inputs: { bg_removal_name: backgroundModels[0] },
+      class_type: "LoadBackgroundRemovalModel"
+    };
+    workflow["67"] = {
+      inputs: { bg_removal_model: ["66", 0], image: finishedImage },
+      class_type: "RemoveBackground"
+    };
+    workflow["68"] = {
+      inputs: { image: finishedImage, alpha: ["67", 0] },
+      class_type: "JoinImageWithAlpha"
+    };
+    exportImage = ["68", 0];
+  }
+  const allowedSizes = new Set([16, 32, 64, 128, 256]);
+  const outputSize = allowedSizes.has(Number(payload.outputSize)) ? Number(payload.outputSize) : 128;
+  workflow["69"] = {
+    inputs: {
+      image: exportImage,
+      upscale_method: payload.pixelFinish ? "nearest-exact" : "lanczos",
+      width: outputSize,
+      height: outputSize,
+      crop: "disabled"
+    },
+    class_type: "ImageScale"
+  };
+  workflow["51"].inputs.images = ["69", 0];
   workflow["51"].inputs.filename_prefix = `SpritePose/${payload.animation}_${String(payload.frame).padStart(2,"0")}`;
   const queued = await fetch(`${COMFY}/prompt`, {
     method: "POST",
@@ -81,7 +132,13 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     if (url.pathname === "/api/comfy/status") {
       const response = await fetch(`${COMFY}/system_stats`);
-      return json(res, response.status, await response.json());
+      const stats = await response.json();
+      const modelsResponse = await fetch(`${COMFY}/models/background_removal`);
+      const backgroundRemovalModels = modelsResponse.ok ? await modelsResponse.json() : [];
+      return json(res, response.status, {
+        ...stats,
+        capabilities: { backgroundRemovalModels }
+      });
     }
     if (url.pathname === "/api/comfy/generate" && req.method === "POST") {
       const payload = JSON.parse((await readBody(req)).toString("utf8"));
@@ -109,5 +166,5 @@ server.on("error", error => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`Sprite Pose Agent v0.7.0: http://127.0.0.1:${PORT}`);
+  console.log(`Sprite Pose Agent v0.9.0: http://127.0.0.1:${PORT}`);
 });

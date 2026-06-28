@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Turn one character reference into an animation-ready sprite sheet.">
   <title>Sprite Pose Agent</title>
-  <link rel="stylesheet" href="styles.css?v=0.7.0">
+  <link rel="stylesheet" href="styles.css?v=0.9.0">
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <span>Sprite Pose Agent</span>
       <small>LAB</small>
     </a>
-    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.7.0</strong></div>
+    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.9.0</strong></div>
   </header>
 
   <main>
@@ -87,20 +87,75 @@
             <small id="comfyStatus">Checking local API…</small>
           </div>
           <label>
-            Generation prompt
-            <textarea id="generationPrompt" rows="4">full-body 2D game sprite, side view, preserve the reference character's clothing, equipment, colours and illustrated style, clean silhouette, consistent proportions, isolated character, plain background, match the supplied pose</textarea>
+            Character description
+            <textarea id="characterDescription" rows="2">single adult male World War I Scottish infantry soldier, age 18 to 50, masculine face and build</textarea>
+          </label>
+          <label>
+            Essential features
+            <textarea id="essentialFeatures" rows="3">Brodie helmet, khaki tunic, tartan kilt, puttees, backpack, Lee-Enfield rifle</textarea>
+          </label>
+          <label>
+            Art style
+            <textarea id="artStyle" rows="3">2D pixel-art game sprite, limited muted WW1 palette, crisp hard-edged colour clusters, clean silhouette</textarea>
+          </label>
+          <label>
+            Additional direction
+            <textarea id="generationPrompt" rows="2">side view, full body, one character only, centred and isolated, solid flat neutral background, no floor, no cast shadow, no decoration</textarea>
+          </label>
+          <label>
+            Avoid
+            <textarea id="negativePrompt" rows="3">female, woman, feminine body, breasts, makeup, long feminine hair, child, text, letters, writing, symbols, watermark, scenery, floor, ground, cast shadow, reflection, decorative background, floating objects, duplicate character, duplicate weapon, cropped body, extra limbs, malformed hands, modern military equipment</textarea>
+          </label>
+          <label class="identity-preset">
+            Identity mode
+            <select id="identityMode">
+              <option value="balanced">Balanced character + pose</option>
+              <option value="strong">Strong character</option>
+              <option value="style">Strong illustrated style</option>
+              <option value="flexible">Flexible exploration</option>
+            </select>
           </label>
           <label class="comfy-range">
-            <span>Character identity <output id="fidelityOutput">75%</output></span>
-            <input id="referenceFidelity" type="range" min="20" max="100" value="75">
+            <span>Identity fine-tune <output id="fidelityOutput">72%</output></span>
+            <input id="referenceFidelity" type="range" min="20" max="100" value="72">
           </label>
           <label class="comfy-range">
             <span>Pose strength <output id="poseStrengthOutput">120%</output></span>
             <input id="poseStrength" type="range" min="50" max="160" value="120">
           </label>
+          <div class="pixel-options">
+            <label><input id="pixelFinish" type="checkbox"> Experimental pixel finish</label>
+            <label>Palette
+              <select id="pixelPalette">
+                <option value="16">16 colours</option>
+                <option value="24" selected>24 colours</option>
+                <option value="32">32 colours</option>
+              </select>
+            </label>
+          </div>
+          <label class="output-size">
+            Sprite output size
+            <select id="outputSize">
+              <option value="16">16 × 16</option>
+              <option value="32">32 × 32</option>
+              <option value="64">64 × 64</option>
+              <option value="128" selected>128 × 128</option>
+              <option value="256">256 × 256</option>
+            </select>
+            <small>128–256 px is recommended for a detailed full-body soldier.</small>
+          </label>
+          <label class="transparent-option">
+            <input id="transparentOutput" type="checkbox" disabled>
+            Transparent Unity PNG
+            <small id="transparentStatus">BiRefNet model required</small>
+          </label>
           <button id="generateFrame" type="button" disabled>Render current pose</button>
           <button class="secondary-comfy-button" id="generateAll" type="button" disabled>Render all missing frames</button>
           <p id="generationStatus">Build an animation plan, then render one frame.</p>
+          <details class="prompt-preview">
+            <summary>Prompt sent to ComfyUI</summary>
+            <p id="promptPreview"></p>
+          </details>
         </div>
       </aside>
 
@@ -172,9 +227,9 @@
   </main>
 
   <footer>
-    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.7.0</strong> · <span id="buildDate">28 JUN 2026</span></span>
+    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.9.0</strong> · <span id="buildDate">29 JUN 2026</span></span>
     <span>Generic foundations now. Specialist pose packs later.</span>
   </footer>
-  <script type="module" src="app.js?v=0.7.0"></script>
+  <script type="module" src="app.js?v=0.9.0"></script>
 </body>
 </html>

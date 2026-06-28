@@ -74,6 +74,8 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 #comfyDot.error { background: var(--orange); }
 .comfy-panel label { display: block; }
 .comfy-panel textarea { width: 100%; margin-top: 7px; padding: 10px; resize: vertical; color: var(--ink); border: 1px solid var(--line); background: white; font: 11px/1.5 Manrope, sans-serif; text-transform: none; }
+.comfy-panel label + label { margin-top: 11px; }
+.identity-preset select { margin-top: 7px; }
 .comfy-panel button { width: 100%; margin-top: 10px; padding: 12px; border: 0; color: var(--ink); background: var(--lime); font-weight: 700; font-size: 11px; }
 .comfy-panel button:disabled { cursor: not-allowed; opacity: .42; }
 .comfy-panel .secondary-comfy-button { margin-top: 6px; border: 1px solid var(--green); color: var(--green); background: white; }
@@ -82,6 +84,19 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .comfy-range output { color: var(--green); }
 .comfy-range input { width: 100%; margin-top: 7px; accent-color: var(--green); }
 #generationStatus { min-height: 28px; margin: 8px 0 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.prompt-preview { margin-top: 8px; color: var(--muted); font-size: 9px; }
+.prompt-preview summary { cursor: pointer; color: var(--green); }
+.prompt-preview p { margin: 7px 0 0; padding: 8px; border: 1px solid var(--line); background: #fff; line-height: 1.5; }
+.pixel-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end; margin-top: 12px; }
+.pixel-options label { margin: 0 !important; }
+.pixel-options input { margin-right: 5px; accent-color: var(--green); }
+.pixel-options select { margin-top: 5px; padding: 7px; }
+.transparent-option { margin-top: 12px !important; padding: 9px; border: 1px solid var(--line); background: #fff; }
+.transparent-option input { margin-right: 5px; accent-color: var(--green); }
+.transparent-option small { display: block; margin: 4px 0 0 20px; color: var(--muted); text-transform: none; }
+.output-size { margin-top: 12px !important; }
+.output-size select { margin-top: 7px; }
+.output-size small { display: block; margin-top: 5px; color: var(--muted); text-transform: none; }
 .stage-panel { border-left: 0; display: flex; flex-direction: column; min-width: 0; }
 .stage-header { height: 104px; padding: 22px 27px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
 .stage-header h2 { margin-bottom: 0; }

@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "0.7.0", buildDate: "2026-06-28" };
+const FALLBACK_VERSION = { version: "0.9.0", buildDate: "2026-06-29" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -114,16 +114,95 @@ let playing = false;
 let timer = null;
 let draggedJoint = null;
 let comfyOnline = false;
+let backgroundRemovalAvailable = false;
 let keyframes = new Set();
 let generatedFrames = [];
 const JOINT_KEYS = ["head", "neck", "hip", "lElbow", "lHand", "rElbow", "rHand", "lKnee", "lFoot", "rKnee", "rFoot"];
+
+function imageFromUrl(url) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = url;
+  });
+}
+
+async function prepareReference(dataUrl) {
+  const image = await imageFromUrl(dataUrl);
+  const scan = document.createElement("canvas");
+  scan.width = image.naturalWidth;
+  scan.height = image.naturalHeight;
+  const scanContext = scan.getContext("2d", { willReadFrequently: true });
+  scanContext.drawImage(image, 0, 0);
+  const pixels = scanContext.getImageData(0, 0, scan.width, scan.height).data;
+  const corner = index => [pixels[index], pixels[index + 1], pixels[index + 2]];
+  const corners = [
+    corner(0),
+    corner((scan.width - 1) * 4),
+    corner((scan.height - 1) * scan.width * 4),
+    corner(((scan.height * scan.width) - 1) * 4)
+  ];
+  const background = [0, 1, 2].map(channel =>
+    corners.reduce((sum, colour) => sum + colour[channel], 0) / corners.length);
+  let left = scan.width;
+  let top = scan.height;
+  let right = -1;
+  let bottom = -1;
+  for (let y = 0; y < scan.height; y += 1) {
+    for (let x = 0; x < scan.width; x += 1) {
+      const i = (y * scan.width + x) * 4;
+      const alpha = pixels[i + 3];
+      const distance = Math.hypot(
+        pixels[i] - background[0],
+        pixels[i + 1] - background[1],
+        pixels[i + 2] - background[2]
+      );
+      if (alpha > 18 && (alpha < 250 || distance > 32)) {
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x);
+        bottom = Math.max(bottom, y);
+      }
+    }
+  }
+  if (right < left || bottom < top) {
+    left = 0; top = 0; right = scan.width - 1; bottom = scan.height - 1;
+  }
+  const width = right - left + 1;
+  const height = bottom - top + 1;
+  const padding = Math.ceil(Math.max(width, height) * 0.1);
+  const side = Math.max(width, height) + padding * 2;
+  const output = document.createElement("canvas");
+  output.width = 512;
+  output.height = 512;
+  const context = output.getContext("2d");
+  context.fillStyle = "#f2f0e9";
+  context.fillRect(0, 0, 512, 512);
+  const scale = 512 / side;
+  const drawWidth = width * scale;
+  const drawHeight = height * scale;
+  context.drawImage(
+    image, left, top, width, height,
+    (512 - drawWidth) / 2, (512 - drawHeight) / 2, drawWidth, drawHeight
+  );
+  return output.toDataURL("image/png");
+}
 
 function loadImage(file) {
   if (!file?.type.startsWith("image/")) return;
   if (imageUrl) URL.revokeObjectURL(imageUrl);
   imageUrl = URL.createObjectURL(file);
   const reader = new FileReader();
-  reader.addEventListener("load", () => { referenceDataUrl = reader.result; });
+  reader.addEventListener("load", async () => {
+    try {
+      referenceDataUrl = await prepareReference(reader.result);
+      $("#generationStatus").textContent = "Reference prepared: tightly cropped and squared for IP-Adapter.";
+    } catch {
+      referenceDataUrl = reader.result;
+      $("#generationStatus").textContent = "Reference loaded without automatic cropping.";
+    }
+  });
   reader.readAsDataURL(file);
   sourcePreview.src = imageUrl;
   $("#animatedSprite").src = imageUrl;
@@ -148,6 +227,44 @@ $("#removeImage").addEventListener("click", () => {
   dropZone.classList.remove("has-image");
   $("#removeImage").classList.add("hidden");
 });
+
+const promptFields = ["characterDescription", "essentialFeatures", "artStyle", "generationPrompt"];
+
+function assembledPrompt(frame = currentFrame + 1) {
+  return [
+    $("#characterDescription").value,
+    $("#essentialFeatures").value,
+    $("#artStyle").value,
+    $("#generationPrompt").value,
+    `${$("#animationSelect").value} animation, frame ${frame}`,
+    "match the supplied OpenPose skeleton"
+  ].map(value => value.trim()).filter(Boolean).join(", ");
+}
+
+function updatePromptPreview() {
+  $("#promptPreview").textContent = assembledPrompt();
+}
+
+promptFields.forEach(id => $(`#${id}`).addEventListener("input", updatePromptPreview));
+$("#negativePrompt").addEventListener("input", updatePromptPreview);
+$("#animationSelect").addEventListener("change", updatePromptPreview);
+
+const IDENTITY_PRESETS = {
+  balanced: { fidelity: 72, pose: 120 },
+  strong: { fidelity: 92, pose: 110 },
+  style: { fidelity: 78, pose: 120 },
+  flexible: { fidelity: 45, pose: 135 }
+};
+
+$("#identityMode").addEventListener("change", event => {
+  const preset = IDENTITY_PRESETS[event.target.value];
+  $("#referenceFidelity").value = preset.fidelity;
+  $("#poseStrength").value = preset.pose;
+  $("#fidelityOutput").value = `${preset.fidelity}%`;
+  $("#poseStrengthOutput").value = `${preset.pose}%`;
+});
+
+updatePromptPreview();
 
 $("#fps").addEventListener("input", e => {
   $("#fpsOutput").value = `${e.target.value} fps`;
@@ -237,6 +354,7 @@ function showFrame(index) {
   $("#toggleKeyframe").classList.toggle("marked", isKey);
   $("#createInbetweens").disabled = keyframes.size < 2;
   [...timeline.children].forEach((node, i) => node.classList.toggle("active", i === currentFrame));
+  updatePromptPreview();
 }
 
 function buildPlan() {
@@ -270,17 +388,24 @@ async function checkComfy() {
     if (!response.ok) throw new Error("ComfyUI unavailable");
     const data = await response.json();
     comfyOnline = true;
+    backgroundRemovalAvailable = Boolean(data.capabilities?.backgroundRemovalModels?.length);
     $("#comfyDot").className = "online";
     $("#comfyStatus").textContent = `Online · ${data.system?.comfyui_version || "ready"}`;
+    $("#transparentOutput").disabled = !backgroundRemovalAvailable;
+    $("#transparentStatus").textContent = backgroundRemovalAvailable
+      ? `BiRefNet ready · ${data.capabilities.backgroundRemovalModels[0]}`
+      : "BiRefNet model required";
     const noPlan = $("#animationStage").classList.contains("hidden");
     $("#generateFrame").disabled = noPlan;
     $("#generateAll").disabled = noPlan;
   } catch {
     comfyOnline = false;
+    backgroundRemovalAvailable = false;
     $("#comfyDot").className = "error";
     $("#comfyStatus").textContent = location.hostname.endsWith("github.io") ? "Local connector required" : "Offline";
     $("#generateFrame").disabled = true;
     $("#generateAll").disabled = true;
+    $("#transparentOutput").disabled = true;
   }
 }
 
@@ -330,7 +455,16 @@ async function renderFrame(index) {
       referenceImage: referenceDataUrl,
       referenceFidelity: Number($("#referenceFidelity").value),
       poseStrength: Number($("#poseStrength").value),
-      prompt: $("#generationPrompt").value,
+      characterDescription: $("#characterDescription").value,
+      essentialFeatures: $("#essentialFeatures").value,
+      artStyle: $("#artStyle").value,
+      direction: $("#generationPrompt").value,
+      negativePrompt: $("#negativePrompt").value,
+      identityMode: $("#identityMode").value,
+      pixelFinish: $("#pixelFinish").checked,
+      pixelPalette: Number($("#pixelPalette").value),
+      outputSize: Number($("#outputSize").value),
+      transparentOutput: $("#transparentOutput").checked,
       animation: $("#animationSelect").value,
       frame: index + 1
     })
