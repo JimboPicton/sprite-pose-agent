@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Turn one character reference into an animation-ready sprite sheet.">
   <title>Sprite Pose Agent</title>
-  <link rel="stylesheet" href="styles.css?v=0.5.2">
+  <link rel="stylesheet" href="styles.css?v=0.5.3">
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <span>Sprite Pose Agent</span>
       <small>LAB</small>
     </a>
-    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.5.2</strong></div>
+    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.5.3</strong></div>
   </header>
 
   <main>
@@ -94,6 +94,10 @@
             <span>Reference fidelity <output id="fidelityOutput">65%</output></span>
             <input id="referenceFidelity" type="range" min="20" max="90" value="65">
           </label>
+          <label class="comfy-range">
+            <span>Pose strength <output id="poseStrengthOutput">120%</output></span>
+            <input id="poseStrength" type="range" min="50" max="160" value="120">
+          </label>
           <button id="generateFrame" type="button" disabled>Render current pose</button>
           <p id="generationStatus">Build an animation plan, then render one frame.</p>
         </div>
@@ -167,9 +171,9 @@
   </main>
 
   <footer>
-    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.5.2</strong> · <span id="buildDate">28 JUN 2026</span></span>
+    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.5.3</strong> · <span id="buildDate">28 JUN 2026</span></span>
     <span>Generic foundations now. Specialist pose packs later.</span>
   </footer>
-  <script type="module" src="app.js?v=0.5.2"></script>
+  <script type="module" src="app.js?v=0.5.3"></script>
 </body>
 </html>

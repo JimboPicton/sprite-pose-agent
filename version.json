@@ -1,5 +1,5 @@
 {
-  "version": "0.5.2",
+  "version": "0.5.3",
   "buildDate": "2026-06-28",
-  "label": "Adjustable reference fidelity"
+  "label": "OpenPose BODY-18 control and pose strength"
 }

@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "0.5.2", buildDate: "2026-06-28" };
+const FALLBACK_VERSION = { version: "0.5.3", buildDate: "2026-06-28" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -274,20 +274,31 @@ function renderControlPose(currentPose) {
   ctx.fillStyle = "#000"; ctx.fillRect(0, 0, 512, 512);
   ctx.scale(scale, scale);
   ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = 7;
-  const midpoint = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-  const lShoulder = midpoint(currentPose.neck, currentPose.lElbow);
-  const rShoulder = midpoint(currentPose.neck, currentPose.rElbow);
-  const segments = [
-    [currentPose.neck,currentPose.hip,"#00ff00"],
-    [currentPose.neck,lShoulder,"#ffff00"], [lShoulder,currentPose.lElbow,"#ff9900"], [currentPose.lElbow,currentPose.lHand,"#ff0000"],
-    [currentPose.neck,rShoulder,"#00ffff"], [rShoulder,currentPose.rElbow,"#0066ff"], [currentPose.rElbow,currentPose.rHand,"#9900ff"],
-    [currentPose.hip,currentPose.lKnee,"#ff00ff"], [currentPose.lKnee,currentPose.lFoot,"#ff0066"],
-    [currentPose.hip,currentPose.rKnee,"#66ff00"], [currentPose.rKnee,currentPose.rFoot,"#00ff99"]
+  const toward = (from, to, amount) => [from[0] + (to[0] - from[0]) * amount, from[1] + (to[1] - from[1]) * amount];
+  const headRadius = Math.max(12, Math.hypot(currentPose.head[0] - currentPose.neck[0], currentPose.head[1] - currentPose.neck[1]) * .58);
+  const nose = [currentPose.head[0], currentPose.head[1] + headRadius * .15];
+  const rShoulder = toward(currentPose.neck, currentPose.rElbow, .34);
+  const lShoulder = toward(currentPose.neck, currentPose.lElbow, .34);
+  const rHip = [currentPose.hip[0] + 6, currentPose.hip[1]];
+  const lHip = [currentPose.hip[0] - 6, currentPose.hip[1]];
+  const rEye = [nose[0] + headRadius * .28, nose[1] - headRadius * .18];
+  const lEye = [nose[0] - headRadius * .28, nose[1] - headRadius * .18];
+  const rEar = [nose[0] + headRadius * .62, nose[1]];
+  const lEar = [nose[0] - headRadius * .62, nose[1]];
+  const points = [
+    nose, currentPose.neck, rShoulder, currentPose.rElbow, currentPose.rHand,
+    lShoulder, currentPose.lElbow, currentPose.lHand, rHip, currentPose.rKnee,
+    currentPose.rFoot, lHip, currentPose.lKnee, currentPose.lFoot, rEye, lEye, rEar, lEar
   ];
-  segments.forEach(([a,b,color]) => {
-    ctx.strokeStyle = color; ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke();
+  const limbPairs = [[1,2],[1,5],[2,3],[3,4],[5,6],[6,7],[1,8],[8,9],[9,10],[1,11],[11,12],[12,13],[1,0],[0,14],[14,16],[0,15],[15,17]];
+  const colours = ["#ff0000","#ff5500","#ffaa00","#ffff00","#aaff00","#55ff00","#00ff00","#00ff55","#00ffaa","#00ffff","#00aaff","#0055ff","#0000ff","#5500ff","#aa00ff","#ff00ff","#ff0055"];
+  limbPairs.forEach(([a,b], index) => {
+    ctx.strokeStyle = colours[index]; ctx.beginPath(); ctx.moveTo(...points[a]); ctx.lineTo(...points[b]); ctx.stroke();
   });
-  ctx.strokeStyle = "#ff3333"; ctx.beginPath(); ctx.arc(...currentPose.head, 18, 0, Math.PI * 2); ctx.stroke();
+  points.forEach((point, index) => {
+    ctx.fillStyle = colours[index % colours.length];
+    ctx.beginPath(); ctx.arc(...point, 4.5, 0, Math.PI * 2); ctx.fill();
+  });
   return canvas.toDataURL("image/png");
 }
 
@@ -303,6 +314,7 @@ $("#generateFrame").addEventListener("click", async () => {
         poseImage: renderControlPose(poses[currentFrame]),
         referenceImage: referenceDataUrl,
         referenceFidelity: Number($("#referenceFidelity").value),
+        poseStrength: Number($("#poseStrength").value),
         prompt: $("#generationPrompt").value,
         animation: $("#animationSelect").value,
         frame: currentFrame + 1
@@ -322,6 +334,9 @@ $("#generateFrame").addEventListener("click", async () => {
 
 $("#referenceFidelity").addEventListener("input", event => {
   $("#fidelityOutput").value = `${event.target.value}%`;
+});
+$("#poseStrength").addEventListener("input", event => {
+  $("#poseStrengthOutput").value = `${event.target.value}%`;
 });
 
 checkComfy();

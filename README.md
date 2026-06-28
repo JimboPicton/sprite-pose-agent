@@ -9,7 +9,7 @@ The first prototype focuses on the core workflow: upload a character, choose an 
 No package installation or build step is required.
 
 1. For pose planning only, open `index.html` directly in a modern browser.
-2. For local ComfyUI generation on Windows, right-click `start-local.ps1` and choose **Run with PowerShell**, then open `http://127.0.0.1:4173`. Alternatively run `node server.mjs`.
+2. For local ComfyUI generation on Windows, double-click `start-local.cmd`, then open `http://127.0.0.1:4173`. The command window stays open so startup errors remain visible. Alternatively run `node server.mjs`.
 3. Upload a PNG, WEBP, or JPG character reference.
 4. Build and preview the walk animation plan.
 5. Select a frame and drag its pose joints over the character reference.
@@ -20,6 +20,8 @@ No package installation or build step is required.
 The current renderer establishes editable joint mapping, template schema, baseline, pivot, playback, export, and an experimental local ComfyUI path. The Comfy workflow combines an image-to-image reference latent with OpenPose ControlNet; stronger identity consistency will later use a dedicated reference-conditioning model such as IP-Adapter.
 
 The **Reference fidelity** control adjusts image-to-image denoise inversely: higher fidelity preserves more of the uploaded image, while lower fidelity permits larger pose changes. The current workflow uses a single rendering pass to avoid a second checkpoint repainting away character details.
+
+The **Pose strength** control adjusts OpenPose ControlNet independently. Until IP-Adapter is installed, substantial pose changes generally need lower reference fidelity (35–55%) and higher pose strength (110–140%).
 
 ## Release identification
 
