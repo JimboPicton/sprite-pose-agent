@@ -79,6 +79,26 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
+const FALLBACK_VERSION = { version: "0.3.1", buildDate: "2026-06-28" };
+
+async function displayVersion() {
+  let release = FALLBACK_VERSION;
+  try {
+    const response = await fetch(`version.json?cache=${Date.now()}`, { cache: "no-store" });
+    if (response.ok) release = await response.json();
+  } catch {
+    // Direct file opening cannot fetch JSON, so the embedded release remains visible.
+  }
+  const versionLabel = `v${release.version}`;
+  $("#headerVersion").textContent = versionLabel;
+  $("#footerVersion").textContent = versionLabel;
+  $("#buildDate").textContent = new Date(`${release.buildDate}T00:00:00`)
+    .toLocaleDateString("en-AU", { day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase();
+  document.title = `Sprite Pose Agent ${versionLabel}`;
+}
+
+displayVersion();
 const fileInput = $("#fileInput");
 const dropZone = $("#dropZone");
 const sourcePreview = $("#sourcePreview");
@@ -87,6 +107,7 @@ const poseCanvas = $("#poseCanvas");
 let imageUrl = "";
 const clonePoses = cloneSequence;
 let poses = clonePoses(WALK_POSES);
+let basePoses = clonePoses(WALK_POSES);
 let currentFrame = 0;
 let playing = false;
 let timer = null;
@@ -180,6 +201,7 @@ function showFrame(index) {
   const pose = poses[currentFrame];
   drawPose(poseCanvas, pose);
   $("#frameLabel").textContent = `Frame ${currentFrame + 1} · ${pose.name}`;
+  $("#propagateForward").disabled = currentFrame === poses.length - 1;
   [...timeline.children].forEach((node, i) => node.classList.toggle("active", i === currentFrame));
 }
 
@@ -189,7 +211,8 @@ function buildPlan() {
   const source = animation === ANIMATIONS.walk && count === 6
     ? animation.poses.filter((_, i) => ![1,5].includes(i))
     : animation.poses;
-  poses = clonePoses(source);
+  basePoses = clonePoses(source);
+  poses = clonePoses(basePoses);
   currentFrame = 0;
   $("#emptyState").classList.add("hidden");
   $("#animationStage").classList.remove("hidden");
@@ -260,20 +283,37 @@ $("#referenceOpacity").addEventListener("input", event => {
   $("#animatedSprite").style.opacity = Number(event.target.value) / 100;
 });
 
+$("#propagateForward").addEventListener("click", () => {
+  if (currentFrame >= poses.length - 1) return;
+  const offsets = Object.fromEntries(JOINT_KEYS.map(key => [
+    key,
+    [
+      poses[currentFrame][key][0] - basePoses[currentFrame][key][0],
+      poses[currentFrame][key][1] - basePoses[currentFrame][key][1]
+    ]
+  ]));
+
+  for (let frame = currentFrame + 1; frame < poses.length; frame += 1) {
+    JOINT_KEYS.forEach(key => {
+      poses[frame][key] = [
+        Math.max(10, Math.min(310, basePoses[frame][key][0] + offsets[key][0])),
+        Math.max(10, Math.min(310, basePoses[frame][key][1] + offsets[key][1]))
+      ];
+    });
+  }
+  renderTimeline();
+  showFrame(currentFrame + 1);
+  $("#frameLabel").textContent += " · fit propagated";
+});
+
 $("#resetFrame").addEventListener("click", () => {
-  const animation = ANIMATIONS[$("#animationSelect").value];
-  const count = Number($("#frameCount").value);
-  const source = animation === ANIMATIONS.walk && count === 6 ? animation.poses.filter((_, i) => ![1,5].includes(i)) : animation.poses;
-  poses[currentFrame] = clonePoses([source[currentFrame]])[0];
+  poses[currentFrame] = clonePoses([basePoses[currentFrame]])[0];
   renderTimeline();
   showFrame(currentFrame);
 });
 
 $("#resetAll").addEventListener("click", () => {
-  const animation = ANIMATIONS[$("#animationSelect").value];
-  const count = Number($("#frameCount").value);
-  const source = animation === ANIMATIONS.walk && count === 6 ? animation.poses.filter((_, i) => ![1,5].includes(i)) : animation.poses;
-  poses = clonePoses(source);
+  poses = clonePoses(basePoses);
   renderTimeline();
   showFrame(currentFrame);
 });

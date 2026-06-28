@@ -12,9 +12,14 @@ No installation or build step is required.
 2. Upload a PNG, WEBP, or JPG character reference.
 3. Build and preview the walk animation plan.
 4. Select a frame and drag its pose joints over the character reference.
-5. Export the edited pose-study sheet or JSON metadata.
+5. Use **Apply fit forward** to carry that frame's fitting offsets into all subsequent frames while preserving their motion.
+6. Export the edited pose-study sheet or JSON metadata.
 
 The current renderer is intentionally a pose-study mock. It establishes the interaction, editable joint mapping, template schema, baseline, pivot, playback, and export pipeline before an AI image provider is connected.
+
+## Release identification
+
+The current release number is shown in the page header, browser title, and footer. `version.json` is the source of truth when the app is served over HTTP. The HTML also embeds the same number as a fallback and adds it to CSS and JavaScript URLs for cache busting. Update all four occurrences together when publishing a new release.
 
 ## Current structure
 

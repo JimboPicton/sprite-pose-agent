@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Turn one character reference into an animation-ready sprite sheet.">
   <title>Sprite Pose Agent</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=0.3.1">
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <span>Sprite Pose Agent</span>
       <small>LAB</small>
     </a>
-    <div class="project-state"><span></span> Local prototype</div>
+    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.3.1</strong></div>
   </header>
 
   <main>
@@ -118,6 +118,7 @@
             Reference
             <input id="referenceOpacity" type="range" min="0" max="100" value="28">
           </label>
+          <button class="propagate-button" id="propagateForward" type="button" title="Apply this frame's joint fitting offsets to every following frame">Apply fit forward →</button>
           <button id="resetFrame" type="button">Reset frame</button>
           <button id="resetAll" type="button">Reset all</button>
         </div>
@@ -146,9 +147,9 @@
   </main>
 
   <footer>
-    <span>SPRITE POSE AGENT · PROTOTYPE 0.1</span>
+    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.3.1</strong> · <span id="buildDate">28 JUN 2026</span></span>
     <span>Generic foundations now. Specialist pose packs later.</span>
   </footer>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=0.3.1"></script>
 </body>
 </html>

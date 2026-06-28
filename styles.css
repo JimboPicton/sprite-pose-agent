@@ -24,6 +24,7 @@ button { cursor: pointer; }
 .brand-mark i { background: var(--green); }
 .brand-mark i:nth-child(2), .brand-mark i:nth-child(3) { background: var(--lime); }
 .project-state { font: 500 11px DM Mono; text-transform: uppercase; letter-spacing: .08em; }
+.project-state strong, footer strong { color: var(--orange); font-weight: 500; }
 .project-state span { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #4f9f66; box-shadow: 0 0 0 4px #dcebd8; }
 main { overflow: hidden; }
 .hero { max-width: 1240px; margin: 0 auto; padding: 76px 24px 48px; position: relative; }
@@ -92,6 +93,8 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .mapping-tools strong { font-size: 11px; }
 .mapping-tools span { color: var(--muted); font-size: 10px; }
 .mapping-tools button { padding: 8px 10px; border: 1px solid var(--line); background: white; font-size: 10px; }
+.mapping-tools .propagate-button { color: white; border-color: var(--green); background: var(--green); }
+.mapping-tools .propagate-button:disabled { cursor: not-allowed; opacity: .4; }
 .reference-opacity { width: 120px; font-size: 8px; }
 .reference-opacity input { margin: 5px 0 0; }
 .export-bar { min-height: 70px; display: flex; align-items: center; gap: 8px; padding: 13px 18px; border-top: 1px solid var(--line); }
