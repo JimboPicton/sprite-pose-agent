@@ -52,6 +52,14 @@
             Animation
             <select id="animationSelect">
               <option value="walk">Walk cycle</option>
+              <option value="idle">Idle</option>
+              <option value="run">Run</option>
+              <option value="jump">Jump</option>
+              <option value="crouch">Crouch / duck</option>
+              <option value="crawl">Crawl</option>
+              <option value="hurt">Hurt / stagger</option>
+              <option value="death">Death / fall</option>
+              <option value="getup">Get up</option>
             </select>
           </label>
           <label>
@@ -99,6 +107,19 @@
             <canvas id="poseCanvas" width="320" height="320"></canvas>
             <span class="frame-label" id="frameLabel">Frame 1 · Contact</span>
           </div>
+        </div>
+
+        <div class="mapping-tools hidden" id="mappingTools">
+          <div>
+            <strong>Pose mapping</strong>
+            <span>Drag any joint to fit the reference image.</span>
+          </div>
+          <label class="reference-opacity">
+            Reference
+            <input id="referenceOpacity" type="range" min="0" max="100" value="28">
+          </label>
+          <button id="resetFrame" type="button">Reset frame</button>
+          <button id="resetAll" type="button">Reset all</button>
         </div>
 
         <div class="timeline hidden" id="timeline"></div>
