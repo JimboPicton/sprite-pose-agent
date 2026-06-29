@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "1.2.2", buildDate: "2026-06-29" };
+const FALLBACK_VERSION = { version: "1.3.1", buildDate: "2026-06-29" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -358,6 +358,8 @@ function showFrame(index) {
     $("#generatedFrame").classList.add("hidden");
   }
   $("#propagateForward").disabled = currentFrame === poses.length - 1;
+  $("#copyPoseNext").disabled = currentFrame === poses.length - 1;
+  $("#clearRenderedFrame").disabled = !generatedFrames[currentFrame];
   const isKey = keyframes.has(currentFrame);
   $("#toggleKeyframe").textContent = isKey ? "Unmark keyframe" : "Mark keyframe";
   $("#toggleKeyframe").classList.toggle("marked", isKey);
@@ -635,13 +637,17 @@ function boneLength(pose, parent, child) {
   );
 }
 
-function pointAtLength(parentPoint, originalParent, originalChild, length) {
-  const dx = originalChild[0] - originalParent[0];
-  const dy = originalChild[1] - originalParent[1];
-  const originalLength = Math.hypot(dx, dy) || 1;
+function boneAngle(pose, parent, child) {
+  return Math.atan2(
+    pose[child][1] - pose[parent][1],
+    pose[child][0] - pose[parent][0]
+  );
+}
+
+function pointAtAngle(parentPoint, angle, length) {
   return [
-    Math.max(10, Math.min(310, Math.round(parentPoint[0] + dx / originalLength * length))),
-    Math.max(10, Math.min(310, Math.round(parentPoint[1] + dy / originalLength * length)))
+    Math.max(10, Math.min(310, Math.round(parentPoint[0] + Math.cos(angle) * length))),
+    Math.max(10, Math.min(310, Math.round(parentPoint[1] + Math.sin(angle) * length)))
   ];
 }
 
@@ -658,17 +664,16 @@ $("#propagateForward").addEventListener("click", () => {
   ];
 
   for (let frame = currentFrame + 1; frame < poses.length; frame += 1) {
-    const target = clonePoses([poses[frame]])[0];
+    const target = clonePoses([basePoses[frame]])[0];
     const fitted = clonePoses([target])[0];
     fitted.hip = [
       Math.max(10, Math.min(310, Math.round(basePoses[frame].hip[0] + hipOffset[0]))),
       Math.max(10, Math.min(310, Math.round(basePoses[frame].hip[1] + hipOffset[1])))
     ];
     BONE_CHAINS.forEach(([parent, child]) => {
-      fitted[child] = pointAtLength(
+      fitted[child] = pointAtAngle(
         fitted[parent],
-        target[parent],
-        target[child],
+        boneAngle(target, parent, child),
         sourceLengths[`${parent}:${child}`]
       );
     });
@@ -679,10 +684,31 @@ $("#propagateForward").addEventListener("click", () => {
   $("#frameLabel").textContent += " · fit propagated";
 });
 
+$("#copyPoseNext").addEventListener("click", () => {
+  if (currentFrame >= poses.length - 1) return;
+  const nextFrame = currentFrame + 1;
+  const nextName = poses[nextFrame].name;
+  poses[nextFrame] = clonePoses([poses[currentFrame]])[0];
+  poses[nextFrame].name = nextName;
+  renderTimeline();
+  showFrame(nextFrame);
+  $("#frameLabel").textContent += " · copied from previous frame";
+});
+
 $("#resetFrame").addEventListener("click", () => {
   poses[currentFrame] = clonePoses([basePoses[currentFrame]])[0];
   renderTimeline();
   showFrame(currentFrame);
+});
+
+$("#clearRenderedFrame").addEventListener("click", () => {
+  if (!generatedFrames[currentFrame]) return;
+  generatedFrames[currentFrame] = null;
+  importedTriageFrames.delete(currentFrame);
+  $("#animatedSprite").src = referenceDataUrl || imageUrl;
+  renderTimeline();
+  showFrame(currentFrame);
+  $("#generationStatus").textContent = `Frame ${currentFrame + 1} artwork cleared. The editable skeleton remains.`;
 });
 
 $("#resetAll").addEventListener("click", () => {

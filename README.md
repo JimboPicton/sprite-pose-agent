@@ -1,6 +1,6 @@
 # Sprite Pose Agent
 
-Current version: **v1.2.2**
+Current version: **v1.3.1**
 
 A web-based foundation for turning one supplied character image into coherent animation frames and exportable sprite sheets.
 
@@ -15,9 +15,10 @@ No package installation or build step is required.
 3. Upload a PNG, WEBP, or JPG character reference.
 4. Build and preview the walk animation plan.
 5. Select a frame and drag its pose joints over the character reference.
-6. Use **Apply fit forward** to carry that frame's fitting offsets into all subsequent frames while preserving their motion.
-7. Alternatively mark two or more edited poses as keyframes, then use **Create in-betweens** to interpolate editable frames between them.
-8. Export the edited pose-study sheet or JSON metadata.
+6. Use **Apply proportions forward** to carry bone lengths and root placement into subsequent frames without changing their walk-cycle angles.
+7. Use **Copy pose to next** when the next frame should begin as an exact duplicate of the current edited pose.
+8. Alternatively mark two or more edited poses as keyframes, then use **Create in-betweens** to interpolate editable frames between them.
+9. Export the edited pose-study sheet or JSON metadata.
 
 The current renderer establishes editable joint mapping, template schema, baseline, pivot, playback, export, and a local ComfyUI path. The Comfy workflow combines IP-Adapter Plus character conditioning with OpenPose ControlNet and starts from a fresh latent canvas.
 
@@ -45,8 +46,12 @@ Open `sheet-lab.html` from the main source panel to process generated cyan-backg
 - click-to-keep/reject frame triage;
 - a live approved-frame animation player with row filtering and adjustable FPS;
 - shared scale and bottom-baseline alignment;
+- onion-skinned comparison with the previous approved frame;
+- mouse-drag and keyboard frame nudging with visible per-frame offsets;
+- baseline or centre pivot locking plus a drift trail for alignment QA;
 - responsive source viewing that expands around the loaded sheet;
 - optional global connected-figure detection that re-registers separated figures into evenly spaced cells;
+- nearest-neighbour output scaling, safe cell margins, and transparent edge-colour extrusion to reduce runtime texture bleeding;
 - transfer of the approved preview row into Motion Study for skeletal overlay and further triage;
 - transparent PNG export at 16, 32, 64, 128, or 256 pixels per cell.
 

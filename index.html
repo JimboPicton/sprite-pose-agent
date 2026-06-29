@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Turn one character reference into an animation-ready sprite sheet.">
   <title>Sprite Pose Agent</title>
-  <link rel="stylesheet" href="styles.css?v=1.2.2">
+  <link rel="stylesheet" href="styles.css?v=1.3.1">
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <span>Sprite Pose Agent</span>
       <small>LAB</small>
     </a>
-    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v1.2.2</strong></div>
+    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v1.3.1</strong></div>
   </header>
 
   <main>
@@ -202,9 +202,11 @@
             Reference
             <input id="referenceOpacity" type="range" min="0" max="100" value="28">
           </label>
-          <button class="propagate-button" id="propagateForward" type="button" title="Carry this frame's bone lengths into every following pose while preserving their joint angles">Apply proportions forward →</button>
+          <button class="propagate-button" id="propagateForward" type="button" title="Carry this frame's bone lengths and root placement forward while preserving every later pose">Apply proportions forward →</button>
+          <button id="copyPoseNext" type="button" title="Use this exact pose as the editable starting point for the next frame">Copy pose to next →</button>
           <button id="toggleKeyframe" type="button">Mark keyframe</button>
           <button id="createInbetweens" type="button" disabled>Create in-betweens</button>
+          <button class="clear-render-button" id="clearRenderedFrame" type="button" disabled>Clear rendered art</button>
           <button id="resetFrame" type="button">Reset frame</button>
           <button id="resetAll" type="button">Reset all</button>
         </div>
@@ -233,9 +235,9 @@
   </main>
 
   <footer>
-    <span>SPRITE POSE AGENT · <strong id="footerVersion">v1.2.2</strong> · <span id="buildDate">29 JUN 2026</span></span>
+    <span>SPRITE POSE AGENT · <strong id="footerVersion">v1.3.1</strong> · <span id="buildDate">29 JUN 2026</span></span>
     <span>Generic foundations now. Specialist pose packs later.</span>
   </footer>
-  <script type="module" src="app.js?v=1.2.2"></script>
+  <script type="module" src="app.js?v=1.3.1"></script>
 </body>
 </html>

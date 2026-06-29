@@ -8,6 +8,7 @@ let background = [0, 255, 255];
 let playerFrame = 0;
 let playerTimer = null;
 let playerPlaying = false;
+let alignmentDrag = null;
 
 function loadImage(file) {
   if (!file?.type.startsWith("image/")) return;
@@ -179,7 +180,7 @@ function detectFigures(imageData, rows, columns) {
       detected.push({
         canvas,
         bounds:{left:0,top:0,right:canvas.width-1,bottom:canvas.height-1},
-        approved:true,review,empty:false,row,column
+        approved:true,review,empty:false,row,column,offsetX:0,offsetY:0
       });
     });
   });
@@ -212,7 +213,7 @@ function analyse() {
       context.putImageData(imageData,0,0);
       const empty=component.largest<100;
       const review=!empty && (component.touches || component.secondSize>component.largest*.2);
-      frames.push({canvas,bounds:component.bounds,approved:!empty,review,empty,row,column});
+      frames.push({canvas,bounds:component.bounds,approved:!empty,review,empty,row,column,offsetX:0,offsetY:0});
     }
   }
   renderFrames();
@@ -278,9 +279,61 @@ function layoutFor(items, size) {
 function drawAligned(context, frame, x, y, size, layout) {
   const b=frame.bounds,w=b.right-b.left+1,h=b.bottom-b.top+1;
   const dw=w*layout.scale,dh=h*layout.scale;
-  const dx=x+(size-dw)/2;
-  const dy=y+size-layout.padding-dh;
+  const anchorMode=$("#anchorMode")?.value || "baseline";
+  const dx=x+(size-dw)/2+(frame.offsetX||0);
+  const anchorY=anchorMode==="centre" ? y+(size-dh)/2 : y+size-layout.padding-dh;
+  const dy=anchorY+(frame.offsetY||0);
+  context.imageSmoothingEnabled=false;
   context.drawImage(frame.canvas,b.left,b.top,w,h,dx,dy,dw,dh);
+}
+
+function drawAlignmentGuides(context, items, current, size, layout) {
+  const anchorMode=$("#anchorMode").value;
+  const guideY=anchorMode==="centre" ? size/2 : size-layout.padding;
+  context.save();
+  context.lineWidth=Math.max(1,size/128);
+  context.setLineDash([Math.max(2,size/32),Math.max(2,size/32)]);
+  context.strokeStyle="rgba(239,107,59,.8)";
+  context.beginPath();
+  context.moveTo(0,guideY+.5);
+  context.lineTo(size,guideY+.5);
+  context.stroke();
+  context.strokeStyle="rgba(31,81,62,.35)";
+  context.beginPath();
+  context.moveTo(size/2+.5,0);
+  context.lineTo(size/2+.5,size);
+  context.stroke();
+  context.setLineDash([]);
+  items.forEach((frame,index)=>{
+    context.beginPath();
+    context.fillStyle=index===current?"#ef6b3b":"rgba(31,81,62,.35)";
+    context.arc(size/2+(frame.offsetX||0),guideY+(frame.offsetY||0),index===current?3:2,0,Math.PI*2);
+    context.fill();
+  });
+  context.restore();
+}
+
+function extrudeTransparentEdgeColours(context,x,y,size) {
+  if(!$("#extrudeEdges").checked)return;
+  const image=context.getImageData(x,y,size,size);
+  const source=new Uint8ClampedArray(image.data);
+  const neighbours=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+  for(let py=0;py<size;py+=1)for(let px=0;px<size;px+=1){
+    const destination=(py*size+px)*4;
+    if(source[destination+3]!==0)continue;
+    for(const [dx,dy] of neighbours){
+      const nx=px+dx,ny=py+dy;
+      if(nx<0||nx>=size||ny<0||ny>=size)continue;
+      const neighbour=(ny*size+nx)*4;
+      if(source[neighbour+3]>0){
+        image.data[destination]=source[neighbour];
+        image.data[destination+1]=source[neighbour+1];
+        image.data[destination+2]=source[neighbour+2];
+        break;
+      }
+    }
+  }
+  context.putImageData(image,x,y);
 }
 
 function renderPlayer() {
@@ -297,8 +350,17 @@ function renderPlayer() {
   }
   playerFrame=(playerFrame+items.length)%items.length;
   const layout=layoutFor(items,size);
+  if($("#onionSkin").checked&&items.length>1){
+    context.save();
+    context.globalAlpha=Number($("#onionOpacity").value)/100;
+    drawAligned(context,items[(playerFrame-1+items.length)%items.length],0,0,size,layout);
+    context.restore();
+  }
   drawAligned(context,items[playerFrame],0,0,size,layout);
-  $("#playerStatus").textContent=`Frame ${playerFrame+1} of ${items.length} · ${size} × ${size}`;
+  drawAlignmentGuides(context,items,playerFrame,size,layout);
+  const current=items[playerFrame];
+  $("#resetOffset").textContent=`${current.offsetX||0},${current.offsetY||0}`;
+  $("#playerStatus").textContent=`Frame ${playerFrame+1} of ${items.length} · ${size} × ${size} · offset ${current.offsetX||0}, ${current.offsetY||0}`;
   $("#sendToMotion").disabled=false;
 }
 
@@ -332,6 +394,7 @@ function exportSheet() {
   frames.forEach(frame=>{
     if(!frame.approved||frame.empty)return;
     drawAligned(context,frame,frame.column*size,frame.row*size,size,layout);
+    extrudeTransparentEdgeColours(context,frame.column*size,frame.row*size,size);
   });
   output.toBlob(blob=>{
     const link=document.createElement("a");
@@ -345,7 +408,9 @@ function exportSheet() {
 function frameDataUrl(frame, size, layout) {
   const canvas=document.createElement("canvas");
   canvas.width=size;canvas.height=size;
-  drawAligned(canvas.getContext("2d"),frame,0,0,size,layout);
+  const context=canvas.getContext("2d");
+  drawAligned(context,frame,0,0,size,layout);
+  extrudeTransparentEdgeColours(context,0,0,size);
   return canvas.toDataURL("image/png");
 }
 
@@ -368,6 +433,60 @@ function sendToMotionStudy() {
   }
 }
 
+function currentPreviewFrame() {
+  const items=previewFrames();
+  if(!items.length)return null;
+  playerFrame=(playerFrame+items.length)%items.length;
+  return items[playerFrame];
+}
+
+function nudgeCurrentFrame(dx,dy) {
+  const frame=currentPreviewFrame();
+  if(!frame)return;
+  frame.offsetX=Math.round((frame.offsetX||0)+dx);
+  frame.offsetY=Math.round((frame.offsetY||0)+dy);
+  renderPlayer();
+}
+
+const alignmentCanvas=$("#playerCanvas");
+alignmentCanvas.addEventListener("pointerdown",event=>{
+  const frame=currentPreviewFrame();
+  if(!frame)return;
+  if(playerPlaying)togglePlayer();
+  const rect=alignmentCanvas.getBoundingClientRect();
+  alignmentDrag={
+    x:event.clientX,
+    y:event.clientY,
+    scaleX:alignmentCanvas.width/rect.width,
+    scaleY:alignmentCanvas.height/rect.height,
+    offsetX:frame.offsetX||0,
+    offsetY:frame.offsetY||0
+  };
+  alignmentCanvas.setPointerCapture(event.pointerId);
+  alignmentCanvas.focus();
+});
+alignmentCanvas.addEventListener("pointermove",event=>{
+  if(!alignmentDrag)return;
+  const frame=currentPreviewFrame();
+  if(!frame)return;
+  frame.offsetX=Math.round(alignmentDrag.offsetX+(event.clientX-alignmentDrag.x)*alignmentDrag.scaleX);
+  frame.offsetY=Math.round(alignmentDrag.offsetY+(event.clientY-alignmentDrag.y)*alignmentDrag.scaleY);
+  renderPlayer();
+});
+function finishAlignmentDrag(event) {
+  alignmentDrag=null;
+  if(alignmentCanvas.hasPointerCapture(event.pointerId))alignmentCanvas.releasePointerCapture(event.pointerId);
+}
+alignmentCanvas.addEventListener("pointerup",finishAlignmentDrag);
+alignmentCanvas.addEventListener("pointercancel",finishAlignmentDrag);
+alignmentCanvas.addEventListener("keydown",event=>{
+  const directions={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+  if(!directions[event.key])return;
+  event.preventDefault();
+  const amount=event.shiftKey?5:1;
+  nudgeCurrentFrame(directions[event.key][0]*amount,directions[event.key][1]*amount);
+});
+
 input.addEventListener("change",()=>loadImage(input.files[0]));
 $("#analyse").addEventListener("click",analyse);
 $("#export").addEventListener("click",exportSheet);
@@ -382,6 +501,21 @@ $("#tolerance").addEventListener("input",event=>{$("#toleranceOut").value=event.
 $("#previewRow").addEventListener("change",()=>{playerFrame=0;renderPlayer();});
 $("#cellSize").addEventListener("change",renderPlayer);
 $("#padding").addEventListener("input",renderPlayer);
+$("#onionSkin").addEventListener("change",renderPlayer);
+$("#onionOpacity").addEventListener("input",event=>{
+  $("#onionOpacityOut").value=`${event.target.value}%`;
+  renderPlayer();
+});
+$("#anchorMode").addEventListener("change",renderPlayer);
+document.querySelectorAll("[data-nudge]").forEach(button=>button.addEventListener("click",()=>{
+  const [dx,dy]=button.dataset.nudge.split(",").map(Number);
+  nudgeCurrentFrame(dx,dy);
+}));
+$("#resetOffset").addEventListener("click",()=>{
+  const frame=currentPreviewFrame();
+  if(!frame)return;
+  frame.offsetX=0;frame.offsetY=0;renderPlayer();
+});
 $("#previewFps").addEventListener("input",event=>{
   $("#previewFpsOut").value=`${event.target.value} fps`;
   if(playerPlaying)startPlayer();
