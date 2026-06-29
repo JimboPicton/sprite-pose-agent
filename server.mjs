@@ -166,5 +166,5 @@ server.on("error", error => {
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  console.log(`Sprite Pose Agent v1.0.0: http://127.0.0.1:${PORT}`);
+  console.log(`Sprite Pose Agent v1.2.1: http://127.0.0.1:${PORT}`);
 });

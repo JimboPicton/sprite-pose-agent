@@ -4,17 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sprite Sheet Lab · Sprite Pose Agent</title>
-  <link rel="stylesheet" href="sheet-lab.css?v=1.0.0">
+  <link rel="stylesheet" href="sheet-lab.css?v=1.2.1">
 </head>
 <body>
   <header>
     <a href="index.html">← Sprite Pose Agent</a>
     <div><strong>Sprite Sheet Lab</strong><small>CHROMA · SLICE · TRIAGE · EXPORT</small></div>
-    <span>v1.0.0</span>
+    <span>v1.2.1</span>
   </header>
 
   <main>
-    <aside>
+    <aside class="controls">
       <p class="kicker">01 / Import</p>
       <h1>Turn AI sheets into game assets.</h1>
       <p class="intro">Remove cyan, split a regular grid, reject suspect frames, align the approved sprites and export a transparent Unity sheet.</p>
@@ -35,12 +35,13 @@
       <div class="two">
         <label>Cell size
           <select id="cellSize">
-            <option>32</option><option>64</option><option selected>128</option><option>256</option>
+            <option>16</option><option>32</option><option>64</option><option selected>128</option><option>256</option>
           </select>
         </label>
         <label>Padding<input id="padding" type="number" min="0" max="32" value="6"></label>
       </div>
       <label class="check"><input id="removeLines" type="checkbox" checked> Detect and remove ground lines</label>
+      <label class="check"><input id="autoDetect" type="checkbox"> Auto-detect and re-space figures</label>
       <button id="analyse" disabled>Analyse sheet</button>
       <button id="export" class="accent" disabled>Export transparent PNG</button>
       <p id="status">Load a sheet to begin.</p>
@@ -58,7 +59,36 @@
       </div>
       <div id="frames" class="frames"><p class="empty">Analysed frames appear here.</p></div>
     </section>
+    <aside class="player" id="player">
+      <p class="kicker">04 / Animation preview</p>
+      <h2>Approved frames</h2>
+      <div class="player-screen"><canvas id="playerCanvas" width="128" height="128"></canvas></div>
+      <div class="transport">
+        <button id="playerPrevious" type="button">←</button>
+        <button id="playerPlay" class="play" type="button">▶</button>
+        <button id="playerNext" type="button">→</button>
+      </div>
+      <label>Preview row
+        <select id="previewRow"><option value="-1">All approved frames</option></select>
+      </label>
+      <label>Motion mapping
+        <select id="motionType">
+          <option value="walk">Walk cycle</option>
+          <option value="run">Run</option>
+          <option value="idle">Idle</option>
+          <option value="crawl">Crawl</option>
+          <option value="hurt">Hurt / stagger</option>
+          <option value="death">Death / fall</option>
+        </select>
+      </label>
+      <label>Playback speed <output id="previewFpsOut">10 fps</output>
+        <input id="previewFps" type="range" min="2" max="24" value="10">
+      </label>
+      <p id="playerStatus">Approve frames to preview them.</p>
+      <button id="sendToMotion" class="send-motion" type="button" disabled>Send preview row to Motion Study →</button>
+      <small>Preview uses the selected export cell size and shared baseline alignment.</small>
+    </aside>
   </main>
-  <script type="module" src="sheet-lab.js?v=1.0.0"></script>
+  <script type="module" src="sheet-lab.js?v=1.2.1"></script>
 </body>
 </html>

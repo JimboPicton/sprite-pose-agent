@@ -1,5 +1,7 @@
 # Sprite Pose Agent
 
+Current version: **v1.2.1**
+
 A web-based foundation for turning one supplied character image into coherent animation frames and exportable sprite sheets.
 
 The first prototype focuses on the core workflow: upload a character, choose an animation template, adjust its canonical skeletons over the reference, preview timing, and export a sprite sheet plus structured metadata. The initial library includes idle, walk, run, jump, crouch, crawl, hurt, death, and get-up sequences. Prop-heavy and multi-character WW1 motion will arrive later as richer optional pose packs.
@@ -41,8 +43,12 @@ Open `sheet-lab.html` from the main source panel to process generated cyan-backg
 - largest connected-subject isolation to discard small generator artefacts;
 - warnings for frames touching cell edges or containing another large component;
 - click-to-keep/reject frame triage;
+- a live approved-frame animation player with row filtering and adjustable FPS;
 - shared scale and bottom-baseline alignment;
-- transparent PNG export at 32, 64, 128, or 256 pixels per cell.
+- responsive source viewing that expands around the loaded sheet;
+- optional global connected-figure detection that re-registers separated figures into evenly spaced cells;
+- transfer of the approved preview row into Motion Study for skeletal overlay and further triage;
+- transparent PNG export at 16, 32, 64, 128, or 256 pixels per cell.
 
 Clean regular strips are the best inputs. Overlapping characters cannot be reconstructed automatically and should be rejected or regenerated.
 

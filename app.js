@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "1.0.0", buildDate: "2026-06-29" };
+const FALLBACK_VERSION = { version: "1.2.1", buildDate: "2026-06-29" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -603,23 +603,64 @@ $("#createInbetweens").addEventListener("click", () => {
   $("#frameLabel").textContent += " · in-betweens created";
 });
 
+const BONE_CHAINS = [
+  ["hip", "neck"],
+  ["neck", "head"],
+  ["neck", "lElbow"],
+  ["lElbow", "lHand"],
+  ["neck", "rElbow"],
+  ["rElbow", "rHand"],
+  ["hip", "lKnee"],
+  ["lKnee", "lFoot"],
+  ["hip", "rKnee"],
+  ["rKnee", "rFoot"]
+];
+
+function boneLength(pose, parent, child) {
+  return Math.hypot(
+    pose[child][0] - pose[parent][0],
+    pose[child][1] - pose[parent][1]
+  );
+}
+
+function pointAtLength(parentPoint, originalParent, originalChild, length) {
+  const dx = originalChild[0] - originalParent[0];
+  const dy = originalChild[1] - originalParent[1];
+  const originalLength = Math.hypot(dx, dy) || 1;
+  return [
+    Math.max(10, Math.min(310, Math.round(parentPoint[0] + dx / originalLength * length))),
+    Math.max(10, Math.min(310, Math.round(parentPoint[1] + dy / originalLength * length)))
+  ];
+}
+
 $("#propagateForward").addEventListener("click", () => {
   if (currentFrame >= poses.length - 1) return;
-  const offsets = Object.fromEntries(JOINT_KEYS.map(key => [
-    key,
-    [
-      poses[currentFrame][key][0] - basePoses[currentFrame][key][0],
-      poses[currentFrame][key][1] - basePoses[currentFrame][key][1]
-    ]
+  const sourcePose = poses[currentFrame];
+  const sourceLengths = Object.fromEntries(BONE_CHAINS.map(([parent, child]) => [
+    `${parent}:${child}`,
+    boneLength(sourcePose, parent, child)
   ]));
+  const hipOffset = [
+    sourcePose.hip[0] - basePoses[currentFrame].hip[0],
+    sourcePose.hip[1] - basePoses[currentFrame].hip[1]
+  ];
 
   for (let frame = currentFrame + 1; frame < poses.length; frame += 1) {
-    JOINT_KEYS.forEach(key => {
-      poses[frame][key] = [
-        Math.max(10, Math.min(310, basePoses[frame][key][0] + offsets[key][0])),
-        Math.max(10, Math.min(310, basePoses[frame][key][1] + offsets[key][1]))
-      ];
+    const target = clonePoses([poses[frame]])[0];
+    const fitted = clonePoses([target])[0];
+    fitted.hip = [
+      Math.max(10, Math.min(310, Math.round(basePoses[frame].hip[0] + hipOffset[0]))),
+      Math.max(10, Math.min(310, Math.round(basePoses[frame].hip[1] + hipOffset[1])))
+    ];
+    BONE_CHAINS.forEach(([parent, child]) => {
+      fitted[child] = pointAtLength(
+        fitted[parent],
+        target[parent],
+        target[child],
+        sourceLengths[`${parent}:${child}`]
+      );
     });
+    poses[frame] = fitted;
   }
   renderTimeline();
   showFrame(currentFrame + 1);
@@ -706,3 +747,44 @@ $("#exportSheet").addEventListener("click", async () => {
   }
   sheet.toBlob(blob => download(blob, `${$("#animationSelect").value}-pose-sheet.png`), "image/png");
 });
+
+function importSheetLabTransfer() {
+  const raw = localStorage.getItem("spritePoseLabTransfer");
+  if (!raw) return;
+  localStorage.removeItem("spritePoseLabTransfer");
+  try {
+    const transfer = JSON.parse(raw);
+    if (!Array.isArray(transfer.frames) || !transfer.frames.length) return;
+    const motion = ANIMATIONS[transfer.motion] ? transfer.motion : "walk";
+    $("#animationSelect").value = motion;
+    const source = ANIMATIONS[motion].poses;
+    basePoses = Array.from({ length: transfer.frames.length }, (_, index) =>
+      clonePoses([source[Math.min(source.length - 1, Math.floor(index * source.length / transfer.frames.length))]])[0]);
+    poses = clonePoses(basePoses);
+    generatedFrames = [...transfer.frames];
+    keyframes = new Set();
+    currentFrame = 0;
+    referenceDataUrl = transfer.frames[0];
+    sourcePreview.src = transfer.frames[0];
+    $("#animatedSprite").src = transfer.frames[0];
+    dropZone.classList.add("has-image");
+    $("#removeImage").classList.remove("hidden");
+    $("#emptyState").classList.add("hidden");
+    $("#animationStage").classList.remove("hidden");
+    $("#mappingTools").classList.remove("hidden");
+    timeline.classList.remove("hidden");
+    $("#stageTitle").textContent = `${ANIMATIONS[motion].label} · ${poses.length} imported frames`;
+    $("#exportJson").disabled = false;
+    $("#exportSheet").disabled = false;
+    $("#generateFrame").disabled = !comfyOnline;
+    $("#generateAll").disabled = !comfyOnline;
+    $("#generationStatus").textContent = `${poses.length} approved Sprite Sheet Lab frames imported for skeletal triage.`;
+    renderTimeline();
+    showFrame(0);
+    document.querySelector(".workspace").scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch {
+    $("#generationStatus").textContent = "The Sprite Sheet Lab transfer could not be read.";
+  }
+}
+
+importSheetLabTransfer();
