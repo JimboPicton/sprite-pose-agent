@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "0.9.0", buildDate: "2026-06-29" };
+const FALLBACK_VERSION = { version: "1.0.0", buildDate: "2026-06-29" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;

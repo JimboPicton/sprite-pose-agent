@@ -54,6 +54,8 @@ h1 em { font-family: "Playfair Display", serif; font-weight: 600; color: var(--g
 #sourcePreview { display: none; position: absolute; inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); object-fit: contain; z-index: 2; background: rgba(247,246,241,.92); image-rendering: pixelated; }
 .drop-zone.has-image #sourcePreview { display: block; }
 .text-button { padding: 7px 0 0; color: var(--orange); border: 0; background: none; font-size: 11px; }
+.lab-link { margin-top: 15px; padding: 12px; display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--green); color: var(--green); text-decoration: none; font-size: 11px; }
+.lab-link b { color: var(--muted); font: 9px DM Mono; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 24px; }
 label { color: #545e58; font: 500 10px DM Mono; letter-spacing: .06em; text-transform: uppercase; }
 select { width: 100%; margin-top: 7px; padding: 11px; color: var(--ink); border: 1px solid var(--line); background: white; font-size: 12px; text-transform: none; }
@@ -69,6 +71,7 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .comfy-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .comfy-heading > div { display: flex; align-items: center; gap: 7px; }
 .comfy-heading small { color: var(--muted); font-size: 9px; }
+.generation-settings > summary { cursor: pointer; margin-bottom: 12px; color: var(--green); font: 500 10px DM Mono; text-transform: uppercase; }
 #comfyDot { width: 8px; height: 8px; border-radius: 50%; background: #a3aaa6; }
 #comfyDot.online { background: #4f9f66; box-shadow: 0 0 0 3px #dcebd8; }
 #comfyDot.error { background: var(--orange); }
@@ -97,13 +100,13 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .output-size { margin-top: 12px !important; }
 .output-size select { margin-top: 7px; }
 .output-size small { display: block; margin-top: 5px; color: var(--muted); text-transform: none; }
-.stage-panel { border-left: 0; display: flex; flex-direction: column; min-width: 0; }
+.stage-panel { border-left: 0; display: flex; flex-direction: column; min-width: 0; align-self: start; }
 .stage-header { height: 104px; padding: 22px 27px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
 .stage-header h2 { margin-bottom: 0; }
 .playback { display: flex; gap: 7px; }
 .playback button { width: 36px; height: 36px; border: 1px solid var(--line); background: white; }
 .playback .play-button { background: var(--orange); border-color: var(--orange); color: white; border-radius: 50%; }
-.canvas-wrap { min-height: 425px; flex: 1; display: grid; place-items: center; position: relative; background-color: #edf0eb; background-image: linear-gradient(#e1e5df 1px,transparent 1px),linear-gradient(90deg,#e1e5df 1px,transparent 1px); background-size: 24px 24px; overflow: hidden; }
+.canvas-wrap { height: 375px; flex: none; display: grid; place-items: center; position: relative; background-color: #edf0eb; background-image: linear-gradient(#e1e5df 1px,transparent 1px),linear-gradient(90deg,#e1e5df 1px,transparent 1px); background-size: 24px 24px; overflow: hidden; }
 .empty-state { text-align: center; color: var(--muted); }
 .empty-state h3 { color: var(--ink); font-size: 17px; margin-bottom: 4px; }
 .empty-state p { font-size: 12px; }

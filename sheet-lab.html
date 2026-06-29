@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sprite Sheet Lab · Sprite Pose Agent</title>
+  <link rel="stylesheet" href="sheet-lab.css?v=1.0.0">
+</head>
+<body>
+  <header>
+    <a href="index.html">← Sprite Pose Agent</a>
+    <div><strong>Sprite Sheet Lab</strong><small>CHROMA · SLICE · TRIAGE · EXPORT</small></div>
+    <span>v1.0.0</span>
+  </header>
+
+  <main>
+    <aside>
+      <p class="kicker">01 / Import</p>
+      <h1>Turn AI sheets into game assets.</h1>
+      <p class="intro">Remove cyan, split a regular grid, reject suspect frames, align the approved sprites and export a transparent Unity sheet.</p>
+
+      <label class="drop" for="sheetInput">
+        <input id="sheetInput" type="file" accept="image/png,image/jpeg,image/webp">
+        <strong>Choose a spritesheet</strong>
+        <small>Bright cyan backgrounds work best</small>
+      </label>
+
+      <div class="two">
+        <label>Columns<input id="columns" type="number" min="1" max="20" value="8"></label>
+        <label>Rows<input id="rows" type="number" min="1" max="20" value="2"></label>
+      </div>
+      <label>Tolerance <output id="toleranceOut">48</output>
+        <input id="tolerance" type="range" min="10" max="120" value="48">
+      </label>
+      <div class="two">
+        <label>Cell size
+          <select id="cellSize">
+            <option>32</option><option>64</option><option selected>128</option><option>256</option>
+          </select>
+        </label>
+        <label>Padding<input id="padding" type="number" min="0" max="32" value="6"></label>
+      </div>
+      <label class="check"><input id="removeLines" type="checkbox" checked> Detect and remove ground lines</label>
+      <button id="analyse" disabled>Analyse sheet</button>
+      <button id="export" class="accent" disabled>Export transparent PNG</button>
+      <p id="status">Load a sheet to begin.</p>
+    </aside>
+
+    <section>
+      <div class="preview-head">
+        <div><p class="kicker">02 / Source preview</p><h2 id="fileName">No sheet loaded</h2></div>
+        <div class="key"><i></i> approved <i></i> review <i></i> rejected</div>
+      </div>
+      <div class="source-wrap"><canvas id="sourceCanvas"></canvas></div>
+      <div class="frames-head">
+        <div><p class="kicker">03 / Frame triage</p><h2>Click a frame to keep or reject it</h2></div>
+        <button id="keepAll" disabled>Keep all</button>
+      </div>
+      <div id="frames" class="frames"><p class="empty">Analysed frames appear here.</p></div>
+    </section>
+  </main>
+  <script type="module" src="sheet-lab.js?v=1.0.0"></script>
+</body>
+</html>

@@ -31,6 +31,21 @@ The final stage scales every frame to an exact square Unity sprite size: 16, 32,
 
 Rendered images are retained against their frame for the current browser session, appear as timeline thumbnails, and replace pose guides in sprite-sheet export. **Render all missing frames** processes the remainder of the sequence one at a time.
 
+## Sprite Sheet Lab
+
+Open `sheet-lab.html` from the main source panel to process generated cyan-background sheets without involving ComfyUI. The lab provides:
+
+- automatic corner sampling and adjustable chroma-key tolerance;
+- configurable grid rows and columns;
+- detection and removal of long ground lines;
+- largest connected-subject isolation to discard small generator artefacts;
+- warnings for frames touching cell edges or containing another large component;
+- click-to-keep/reject frame triage;
+- shared scale and bottom-baseline alignment;
+- transparent PNG export at 32, 64, 128, or 256 pixels per cell.
+
+Clean regular strips are the best inputs. Overlapping characters cannot be reconstructed automatically and should be rejected or regenerated.
+
 ## LoRA foundation
 
 A project-specific LoRA is the planned route to a repeatable WW1 visual language and consistent cast.

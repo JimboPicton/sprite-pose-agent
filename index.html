@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Turn one character reference into an animation-ready sprite sheet.">
   <title>Sprite Pose Agent</title>
-  <link rel="stylesheet" href="styles.css?v=0.9.0">
+  <link rel="stylesheet" href="styles.css?v=1.0.0">
 </head>
 <body>
   <header class="topbar">
@@ -14,7 +14,7 @@
       <span>Sprite Pose Agent</span>
       <small>LAB</small>
     </a>
-    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v0.9.0</strong></div>
+    <div class="project-state"><span></span> Local prototype · <strong id="headerVersion">v1.0.0</strong></div>
   </header>
 
   <main>
@@ -46,6 +46,9 @@
           <img id="sourcePreview" alt="Uploaded character preview">
         </label>
         <button class="text-button hidden" id="removeImage" type="button">Remove image</button>
+        <a class="lab-link" href="sheet-lab.html">
+          <span>Open Sprite Sheet Lab</span><b>Clean · slice · triage →</b>
+        </a>
 
         <div class="field-row">
           <label>
@@ -86,6 +89,8 @@
             <div><span id="comfyDot"></span><strong>ComfyUI</strong></div>
             <small id="comfyStatus">Checking local API…</small>
           </div>
+          <details class="generation-settings" open>
+          <summary>Character and rendering settings</summary>
           <label>
             Character description
             <textarea id="characterDescription" rows="2">single adult male World War I Scottish infantry soldier, age 18 to 50, masculine face and build</textarea>
@@ -155,6 +160,7 @@
           <details class="prompt-preview">
             <summary>Prompt sent to ComfyUI</summary>
             <p id="promptPreview"></p>
+          </details>
           </details>
         </div>
       </aside>
@@ -227,9 +233,9 @@
   </main>
 
   <footer>
-    <span>SPRITE POSE AGENT · <strong id="footerVersion">v0.9.0</strong> · <span id="buildDate">29 JUN 2026</span></span>
+    <span>SPRITE POSE AGENT · <strong id="footerVersion">v1.0.0</strong> · <span id="buildDate">29 JUN 2026</span></span>
     <span>Generic foundations now. Specialist pose packs later.</span>
   </footer>
-  <script type="module" src="app.js?v=0.9.0"></script>
+  <script type="module" src="app.js?v=1.0.0"></script>
 </body>
 </html>
