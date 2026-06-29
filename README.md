@@ -1,6 +1,6 @@
 # Sprite Pose Agent
 
-Current version: **v1.2.1**
+Current version: **v1.2.2**
 
 A web-based foundation for turning one supplied character image into coherent animation frames and exportable sprite sheets.
 

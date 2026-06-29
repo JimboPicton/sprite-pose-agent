@@ -79,7 +79,7 @@ const ANIMATIONS = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const FALLBACK_VERSION = { version: "1.2.1", buildDate: "2026-06-29" };
+const FALLBACK_VERSION = { version: "1.2.2", buildDate: "2026-06-29" };
 
 async function displayVersion() {
   let release = FALLBACK_VERSION;
@@ -117,6 +117,7 @@ let comfyOnline = false;
 let backgroundRemovalAvailable = false;
 let keyframes = new Set();
 let generatedFrames = [];
+let importedTriageFrames = new Set();
 const JOINT_KEYS = ["head", "neck", "hip", "lElbow", "lHand", "rElbow", "rHand", "lKnee", "lFoot", "rKnee", "rFoot"];
 
 function imageFromUrl(url) {
@@ -342,10 +343,18 @@ function showFrame(index) {
   const pose = poses[currentFrame];
   drawPose(poseCanvas, pose);
   $("#frameLabel").textContent = `Frame ${currentFrame + 1} · ${pose.name}`;
-  if (generatedFrames[currentFrame]) {
+  const isImportedTriageFrame = importedTriageFrames.has(currentFrame);
+  $("#animationStage").classList.toggle("triage-import", isImportedTriageFrame);
+  if (isImportedTriageFrame && generatedFrames[currentFrame]) {
+    $("#animatedSprite").src = generatedFrames[currentFrame];
+    $("#generatedFrame").style.opacity = "";
+    $("#generatedFrame").classList.add("hidden");
+  } else if (generatedFrames[currentFrame]) {
     $("#generatedFrame").src = generatedFrames[currentFrame];
+    $("#generatedFrame").style.opacity = "";
     $("#generatedFrame").classList.remove("hidden");
   } else {
+    $("#generatedFrame").style.opacity = "";
     $("#generatedFrame").classList.add("hidden");
   }
   $("#propagateForward").disabled = currentFrame === poses.length - 1;
@@ -367,6 +376,7 @@ function buildPlan() {
   poses = clonePoses(basePoses);
   keyframes = new Set();
   generatedFrames = Array(poses.length).fill(null);
+  importedTriageFrames = new Set();
   currentFrame = 0;
   $("#emptyState").classList.add("hidden");
   $("#animationStage").classList.remove("hidden");
@@ -472,6 +482,7 @@ async function renderFrame(index) {
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "Generation failed");
   generatedFrames[index] = result.image;
+  importedTriageFrames.delete(index);
   renderTimeline();
   showFrame(index);
   return result.image;
@@ -571,7 +582,8 @@ poseCanvas.addEventListener("pointerup", finishJointDrag);
 poseCanvas.addEventListener("pointercancel", finishJointDrag);
 
 $("#referenceOpacity").addEventListener("input", event => {
-  $("#animatedSprite").style.opacity = Number(event.target.value) / 100;
+  const opacity = Number(event.target.value) / 100;
+  $("#animatedSprite").style.opacity = opacity;
 });
 
 $("#toggleKeyframe").addEventListener("click", () => {
@@ -762,6 +774,7 @@ function importSheetLabTransfer() {
       clonePoses([source[Math.min(source.length - 1, Math.floor(index * source.length / transfer.frames.length))]])[0]);
     poses = clonePoses(basePoses);
     generatedFrames = [...transfer.frames];
+    importedTriageFrames = new Set(transfer.frames.map((_, index) => index));
     keyframes = new Set();
     currentFrame = 0;
     referenceDataUrl = transfer.frames[0];

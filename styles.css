@@ -116,6 +116,7 @@ input[type=range] { width: 100%; accent-color: var(--green); margin-top: 12px; }
 .animation-stage img { opacity: .28; filter: saturate(.5); pointer-events: none; }
 .animation-stage .generated-frame { z-index: 4; opacity: 1; filter: none; background: white; }
 #poseCanvas { z-index: 2; cursor: grab; touch-action: none; }
+.animation-stage.triage-import #poseCanvas { z-index: 5; }
 #poseCanvas.dragging { cursor: grabbing; }
 .ground-line { position: absolute; z-index: 3; left: -90px; right: -90px; top: 286px; border-top: 1px dashed var(--orange); }
 .frame-label { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); white-space: nowrap; background: var(--ink); color: white; padding: 6px 10px; font: 10px DM Mono; }
